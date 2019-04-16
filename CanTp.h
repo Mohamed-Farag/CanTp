@@ -176,13 +176,15 @@ CanTp_RunTimeDataType CanTpRunTimeData =			// Global object
 
 //prototypes of some functions used in sws .
 
-
+/* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error */
 void CanTp_Init( const CanTp_ConfigType* CfgPtr );
 
 
 //void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );
 
 
+
+/* This Function move the state to CanTp_OFF*/
 void CanTp_Shutdown( void );
 
 
@@ -209,7 +211,11 @@ static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_Channe
 static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus);
 void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr);
 static BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize,PduLengthType *bytesWrittenSuccessfully);
+
+/* this function coping data and length to Rx_runtime.canFrameBufferData if segementsize < MAX_SEGMENT_DATA_SIZE and return True if copying Done */
 static bool copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize);
+
+/* This Fuction is used to get the length of the PDU from N_PCI */
 static PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr);
 static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
 

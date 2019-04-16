@@ -20,7 +20,7 @@
 #include "MemMap.h"
 #include "Det.h"
 
-
+/************************************************** Stup Functions ***********************************************************/
 
 void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result)
 {
@@ -33,6 +33,7 @@ BufReq_ReturnType PduR_CanTpProvideRxBuffer(PduIdType id, PduLengthType length,
 		PduInfoType **PduInfoPtr) {
 	;
 }
+
 
 //
 //
@@ -94,6 +95,504 @@ BufReq_ReturnType PduR_CanTpProvideRxBuffer(PduIdType id, PduLengthType length,
 ////	}
 //	return ret;
 //}
+
+
+
+
+
+
+/* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error */
+void CanTp_Init( const CanTp_ConfigType* CfgPtr )
+{
+
+
+		CanTp_ChannelPrivateType *runtimeData;
+		//uint8 TxChannel;
+		//uint8 RxChannel;
+
+
+		uint8 i;
+		for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++)
+			{
+
+
+
+				if ( CfgPtr->CanTpChannel.direction == IS015765_TRANSMIT )
+				{
+										/* For Tx */
+
+					/* this if handle if CanTpTxChannel < Runtime_list_size
+					 *then access the  CanTpTxChannel element in the runtimeDataList
+					 * else access the last item in the runtimeDataList
+					 */
+							if (CfgPtr->CanTpChannel.CanTpTxNSdu[i].CanTpTxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
+							{
+								runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpTxNSdu[i].CanTpTxChannel];
+							}
+							 else
+							{
+								runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
+							}
+
+							initTx15765RuntimeData( runtimeData );
+
+				}
+
+				else
+				{
+										/* For Rx */
+					/* this if handle if CanTpTxChannel < Runtime_list_size
+					 *then access the  CanTpTxChannel element in the runtimeDataList
+					 * else access the last item in the runtimeDataList
+					 */
+
+							if (CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
+							{
+								runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel];
+							}
+							else
+							{
+								runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
+							}
+							initRx15765RuntimeData( runtimeData );
+
+				}
+			}
+
+		CanTpRunTimeData.internalState = CANTP_ON;    /* if the initfunc finished correcltly without errors ,then move into CANTP_ON state */
+
+}
+
+
+
+
+//
+//
+//void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
+//{
+//
+//	const CanTp_RxNSduType *rxConfigParams; // Params reside in ROM.
+//	const CanTp_TxNSduType *txConfigParams;
+//	CanTp_AddressingFormatType addressingFormat; 								// Configured
+//	CanTp_ChannelPrivateType *runtimeParams = 0; // Params reside in RAM.
+//	ISO15765FrameType frameType;
+//	PduIdType CanTpTxNSduId, CanTpRxNSduId;
+//
+//	//Check if PduId is valid
+//	if (CanTpRxPduId >= CANTP_RXID_LIST_SIZE)
+//	{
+//		return;
+//	}
+//
+//	addressingFormat = CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpRxPduId].CanTpTxAddressingFormat;
+//
+//	/* TODO John - Use a different indication of not set than 0xFFFF? */
+//	frameType = getFrameType(addressingFormat, CanTpRxPduPtr);
+//
+//	if( frameType == FLOW_CONTROL_CTS_FRAME )
+//	{
+//		if( CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpRxPduId].CanTpReferringTxIndex != 0xFFFF )
+//		{
+//			CanTpTxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpReferringTxIndex;
+//			//txConfigParams = &CanTpConfig.CanTpNSduList[CanTpTxNSduId].configData.CanTpTxNSdu;
+//			txConfigParams = CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpTxNSduId];
+//			runtimeParams = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
+//		}
+//		else
+//		{
+//			//Invalid FC received
+//			return;
+//		}
+//		rxConfigParams = NULL;
+//	}
+//
+//	else
+//	{
+//		if( CanTp_Config.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex != 0xFFFF )
+//		{
+//			CanTpRxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex;
+//			rxConfigParams = &CanTpConfig.CanTpNSduList[CanTpRxNSduId].configData.CanTpRxNSdu;
+//			runtimeParams = &CanTpRunTimeData.runtimeDataList[rxConfigParams->CanTpRxChannel];
+//		}
+//		else {
+//			//Invalid Frame received
+//			return;
+//		}
+//		txConfigParams = NULL;
+//	}
+//
+//
+//
+//	switch (frameType)
+//	{
+//	case SINGLE_FRAME:
+//	{
+//		if (rxConfigParams != NULL)
+//		{
+//			handleSingleFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
+//		}
+//
+//		break;
+//	}
+//
+//	case FIRST_FRAME:
+//	{
+//		if (rxConfigParams != NULL)
+//		{
+//			handleFirstFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
+//		}
+//		break;
+//	}
+//
+//	case CONSECUTIVE_FRAME:
+//	{
+//		if (rxConfigParams != NULL)
+//		{
+//			handleConsecutiveFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
+//		}
+//		break;
+//	}
+//
+//	case FLOW_CONTROL_CTS_FRAME:
+//	{
+//		if (txConfigParams != NULL)
+//		{
+//			handleFlowControlFrame(txConfigParams, runtimeParams, CanTpRxPduPtr);
+//		}
+//		break;
+//	}
+//	case INVALID_FRAME:
+//	{
+//		break;
+//	}
+//
+//	default:
+//		break;
+//	}
+//}
+//
+
+
+
+/*
+ * This function copies the segment to PduR Receiving Buffer, requests a new buffer from the SDUR if needed,
+ * and reports the error to the Development Error Tracer (DET).
+ *
+ * Function Name: copySegmentToPduRRxBuffer
+ * Parameters:
+ * 				Inputs: 5
+ *
+ * 					1.	Name: *rxConfig
+ * 						Type: CanTp_RxNSduType
+ * 						Description: pointer to a structure contains the configurations of RX.
+ *
+ * 					2.	Name: *rxRuntime
+ * 						Type: CanTp_ChannelPrivateType
+ * 						Description: pointer to a structure contains the runtime parameters of RX.
+ *
+ * 					3.	Name: *segment
+ * 						Type: uint8
+ * 						Description: pointer to the segment or the data to be copied.
+ *
+ * 					4.	Name: segmentSize
+ * 						Type: PduLengthType
+ * 						Description: length of the Pdu.
+ *
+ * 					5.	Name: *bytesWrittenSuccessfully
+ * 						Type: PduLengthType
+ * 						Description: length of bytes written successfully.
+ *
+ *
+ * 				Returns:
+ *						BufReq_ReturnType:  BUFREQ_OK         0
+ *	  								   		BUFREQ_NOT_OK     1
+ *	  								   		BUFREQ_BUSY       2
+ *	  								   		BUFREQ_OVFL       3
+ *
+ */
+static BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
+													CanTp_ChannelPrivateType *rxRuntime,
+																		uint8 *segment,
+																PduLengthType segmentSize,
+																PduLengthType *BytesWrittenSuccessfully)
+{
+
+	BufReq_ReturnType return_value = BUFREQ_NOT_OK;
+	bool endLoop = FALSE;
+	*BytesWrittenSuccessfully = 0;
+
+	while ((*BytesWrittenSuccessfully < segmentSize) && (!endLoop))
+	{
+		/*copy the data in the buffer as long as loop is not ended and there`s a room for copying*/
+
+		if (rxRuntime->pdurBuffer != NULL)
+		{
+			/*no new buffer is needed*/
+			while ((*BytesWrittenSuccessfully < segmentSize ) && (rxRuntime->pdurBuffer->SduLength > rxRuntime->pdurBufferCount))
+			{
+				rxRuntime->pdurBuffer->SduDataPtr[rxRuntime->pdurBufferCount++] = segment[(*BytesWrittenSuccessfully)++];
+			}
+		}
+
+		if (*BytesWrittenSuccessfully < segmentSize )
+		{
+			/*request a new buffer from the SDUR.*/
+			return_value = PduR_CanTpProvideRxBuffer(rxConfig->CanTpRxNPdu.CanTpRxNPduId, rxRuntime->transferTotal, &rxRuntime->pdurBuffer);
+
+			/* just for protection, timeout should be added here but not necessary, the program should run well without it*/
+
+			if (return_value == BUFREQ_OK)
+			{
+				/*new buffer request is successfully completed*/
+				rxRuntime->pdurBufferCount = 0;   /*Empty the buffer.*/
+			}
+
+			else if (return_value == BUFREQ_BUSY)
+			{
+				rxRuntime->transferCount += *BytesWrittenSuccessfully;
+				endLoop = TRUE;
+			}
+
+			else
+			{
+				endLoop = TRUE; /*###### This error must be handled while calling the function ######*/
+			}
+
+		}
+
+		else
+		{
+			rxRuntime->transferCount += segmentSize; /*== BytesWrittenSuccessfully*/
+			return_value = BUFREQ_OK;
+			endLoop = TRUE;
+		}
+	}
+	return return_value;
+}
+
+/* this function coping data and length to Rx_runtime.canFrameBufferData if segementsize < MAX_SEGMENT_DATA_SIZE and return True if copying Done */
+static bool copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize)
+{
+	bool ret = FALSE;
+
+	if ( segmentSize < MAX_SEGMENT_DATA_SIZE )
+	{
+		uint8 i;
+		/*This for loop copying the Data to local Buffer*/
+		for (i=0; i < segmentSize; i++)
+		{
+			rxRuntime->canFrameBuffer.data[i] = segment[i];              // segment is data
+		}
+
+		rxRuntime->canFrameBuffer.byteCount = segmentSize;              // copy Length To The local Buffer
+		ret = TRUE;
+	}
+	return ret;			/* return True if copying is Done as the size is small than MAX_SEGMENT_DATA_SIZE */
+}
+
+/* This Fuction is used to get the length of the PDU from N_PCI */
+static PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr)
+{
+	PduLengthType res = 0;
+	uint8 tpci_offset = 0;
+
+
+	 /* to check the format type */
+	switch (*formatType)
+	{
+	case CANTP_STANDARD:
+		tpci_offset = 0;
+		break;
+	case CANTP_EXTENDED:
+		tpci_offset = 1;
+		break;
+	default:
+		return 0;
+	}
+
+	switch (iso15765Frame)
+	{
+	case SINGLE_FRAME:
+		// Parse the data length from the single frame header.
+		res = CanTpRxPduPtr->SduDataPtr[tpci_offset] & ISO15765_TPCI_DL;
+		break;
+	case FIRST_FRAME:
+		// Parse the data length form the first frame.
+		res = CanTpRxPduPtr->SduDataPtr[tpci_offset + 1] + ((PduLengthType)((CanTpRxPduPtr->SduDataPtr[tpci_offset]) & 0xf) << 8);
+		break;
+	default:
+		res = 0;
+		break;
+	}
+	return res;
+}
+
+/* This Function get The Frame Type { SF,FF,CF,CTS_FC,WAIT_FC,OVERFLOW_FC } */
+static ISO15765FrameType getFrameType(const CanTp_AddressingFormatType *formatType,const PduInfoType *CanTpRxPduPtr)
+{
+	ISO15765FrameType res = INVALID_FRAME;
+	uint8 tpci = 0;
+
+	switch (*formatType)
+	{
+	case CANTP_STANDARD:
+		tpci = CanTpRxPduPtr->SduDataPtr[0];
+		break;
+
+	case CANTP_EXTENDED:
+		tpci = CanTpRxPduPtr->SduDataPtr[1];
+		break;
+
+	default:
+		break;
+	}
+
+	switch (tpci & ISO15765_TPCI_MASK)
+	{
+	case ISO15765_TPCI_SF:
+		res = SINGLE_FRAME;
+		break;
+	case ISO15765_TPCI_FF:
+		res = FIRST_FRAME;
+		break;
+	case ISO15765_TPCI_CF:
+		res = CONSECUTIVE_FRAME;
+		break;
+
+	case ISO15765_TPCI_FC: 						/* check which kind of flow control. */
+		switch (tpci & ISO15765_TPCI_FS_MASK)
+		{
+		case ISO15765_FLOW_CONTROL_STATUS_CTS:
+			res = FLOW_CONTROL_CTS_FRAME;
+			break;
+		case ISO15765_FLOW_CONTROL_STATUS_WAIT:
+			res = FLOW_CONTROL_WAIT_FRAME;
+			break;
+		case ISO15765_FLOW_CONTROL_STATUS_OVFLW:
+			res = FLOW_CONTROL_OVERFLOW_FRAME;
+			break;
+		}
+	}
+	return res;
+}
+
+
+
+/*************************************************** Handling All Frames ************************************************************/
+
+static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
+{
+	BufReq_ReturnType ret;
+	PduLengthType pduLength;
+	uint8 *data = NULL;                       /* will pointer to points to N_PCI  */
+	PduLengthType bytesWrittenToSduRBuffer;
+
+
+	if (rxRuntime->iso15765.state != IDLE)
+	{
+		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
+	}
+
+	(void) initRx15765RuntimeData(rxRuntime);
+	pduLength = getPduLength(&rxConfig->CanTpRxAddressingFormat, SINGLE_FRAME, rxPduData);
+
+
+
+	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
+	{
+		data = &rxPduData->SduDataPtr[1];
+	}
+	else								/* in case of Extended Addressing format */
+	{
+		data = &rxPduData->SduDataPtr[2];
+	}
+
+	rxRuntime->transferTotal = pduLength;
+	rxRuntime->iso15765.state = SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER;
+	rxRuntime->mode = CANTP_RX_PROCESSING;
+	rxRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(rxConfig->CanTpNbr);
+
+	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, data, pduLength, &bytesWrittenToSduRBuffer);
+
+	if (ret == BUFREQ_OK)
+	{
+		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_OK);
+		rxRuntime->iso15765.state = IDLE;
+		rxRuntime->mode = CANTP_RX_WAIT;
+
+	}
+	else if (ret == BUFREQ_BUSY)
+	{
+		if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
+		{
+			data = &rxPduData->SduDataPtr[1];
+		}
+		else
+		{
+			data = &rxPduData->SduDataPtr[2];
+		}
+		(void)copySegmentToLocalRxBuffer(rxRuntime, data, pduLength ); 	   // copy data to local buffer
+		rxRuntime->iso15765.state = RX_WAIT_SDU_BUFFER;
+		rxRuntime->mode = CANTP_RX_PROCESSING;
+	}
+	else
+	{
+		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NO_BUFFER);
+		rxRuntime->iso15765.state = IDLE;
+		rxRuntime->mode = CANTP_RX_WAIT;
+	}
+}
+
+
+static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData)
+{
+
+	int indexCount = 0;
+	uint8 extendedAddress = 0;
+
+	if ( txRuntime->iso15765.state == TX_WAIT_FLOW_CONTROL )
+	{
+		if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
+		{
+			extendedAddress = txPduData->SduDataPtr[indexCount++];                     // code we7esh we hanshelha 3ashan mabyesta5demhash
+		}
+
+		// txPduData->SduDataPtr[indexCount++] = 1st byte (frame type + flow control flag)
+		switch (txPduData->SduDataPtr[indexCount++] & ISO15765_TPCI_FS_MASK) // checking the flow control flag (Clear To Send=0 , Wait=1, Overflow/abort =2)
+		{
+		case ISO15765_FLOW_CONTROL_STATUS_CTS:
+#if 1
+		{	// This construction is added to make the hcs12 compiler happy.
+			const uint8 bs = txPduData->SduDataPtr[indexCount++];
+			txRuntime->iso15765.BS = bs;
+			txRuntime->iso15765.nextFlowControlCount = bs;
+		}
+		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
+#else
+		txRuntime->iso15765.BS = txPduData->SduDataPtr[indexCount++];
+		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
+		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
+#endif
+		// change state and setup timout
+		txRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(txConfig->CanTpNcs);
+		txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
+		break;
+
+		case ISO15765_FLOW_CONTROL_STATUS_WAIT:
+			txRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(txConfig->CanTpNbs);  /*CanTp: 264*/
+			txRuntime->iso15765.state = TX_WAIT_FLOW_CONTROL;
+			break;
+
+		case ISO15765_FLOW_CONTROL_STATUS_OVFLW:
+			PduR_CanTpRxIndication(txConfig->CanTpRxFcNPdu.CanTpRxFcNPduId, NTFRSLT_E_NOT_OK);       // 27na benehbed ,,,, PduR_PduID
+			txRuntime->iso15765.state = IDLE;
+			txRuntime->mode = CANTP_TX_WAIT;
+			break;
+		}
+	}
+}
+
+
 
 static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
 {
@@ -206,6 +705,7 @@ static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_Channe
 
 
 
+/****************************************************** sending  Frames**************************************************************/
 
 static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus)
 {
@@ -286,69 +786,14 @@ static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_Channel
 }
 
 
-void CanTp_Init( const CanTp_ConfigType* CfgPtr )
-{
-
-
-		CanTp_ChannelPrivateType *runtimeData;
-		//uint8 TxChannel;
-		//uint8 RxChannel;
-
-
-		uint8 i;
-		for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++)
-			{
 
 
 
-				if ( CfgPtr->CanTpChannel.direction == IS015765_TRANSMIT )
-				{
-										/* For Tx */
-
-					/* this if handle if CanTpTxChannel < Runtime_list_size
-					 *then access the  CanTpTxChannel element in the runtimeDataList
-					 * else access the last item in the runtimeDataList
-					 */
-							if (CfgPtr->CanTpChannel.CanTpTxNSdu[i].CanTpTxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpTxNSdu[i].CanTpTxChannel];
-							}
-							 else
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
-							}
-
-							initTx15765RuntimeData( runtimeData );
-
-				}
-
-				else
-				{
-										/* For Rx */
-					/* this if handle if CanTpTxChannel < Runtime_list_size
-					 *then access the  CanTpTxChannel element in the runtimeDataList
-					 * else access the last item in the runtimeDataList
-					 */
-
-							if (CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel];
-							}
-							else
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
-							}
-							initRx15765RuntimeData( runtimeData );
-
-				}
-			}
-
-		CanTpRunTimeData.internalState = CANTP_ON;    /* if the initfunc finished correcltly without errors ,then move into CANTP_ON state */
-
-}
 
 
 
+
+/* This Function move the state to CanTp_OFF*/
 
 void CanTp_Shutdown(void)
 {
@@ -356,400 +801,6 @@ void CanTp_Shutdown(void)
 	CanTpRunTimeData.internalState = CANTP_OFF;
 
 }
-
-static ISO15765FrameType getFrameType(const CanTp_AddressingFormatType *formatType,const PduInfoType *CanTpRxPduPtr)
-{
-	ISO15765FrameType res = INVALID_FRAME;
-	uint8 tpci = 0;
-
-	switch (*formatType)
-	{
-	case CANTP_STANDARD:
-		tpci = CanTpRxPduPtr->SduDataPtr[0];
-		break;
-
-	case CANTP_EXTENDED:
-		tpci = CanTpRxPduPtr->SduDataPtr[1];
-		break;
-
-	default:
-		break;
-	}
-
-	switch (tpci & ISO15765_TPCI_MASK)
-	{
-	case ISO15765_TPCI_SF:
-		res = SINGLE_FRAME;
-		break;
-	case ISO15765_TPCI_FF:
-		res = FIRST_FRAME;
-		break;
-	case ISO15765_TPCI_CF:
-		res = CONSECUTIVE_FRAME;
-		break;
-
-	case ISO15765_TPCI_FC: 						// Some kind of flow control.
-		switch (tpci & ISO15765_TPCI_FS_MASK)
-		{
-		case ISO15765_FLOW_CONTROL_STATUS_CTS:
-			res = FLOW_CONTROL_CTS_FRAME;
-			break;
-		case ISO15765_FLOW_CONTROL_STATUS_WAIT:
-			res = FLOW_CONTROL_WAIT_FRAME;
-			break;
-		case ISO15765_FLOW_CONTROL_STATUS_OVFLW:
-			res = FLOW_CONTROL_OVERFLOW_FRAME;
-			break;
-		}
-	}
-	return res;
-}
-
-static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData)
-{
-
-	int indexCount = 0;
-	uint8 extendedAddress = 0;
-
-	if ( txRuntime->iso15765.state == TX_WAIT_FLOW_CONTROL )
-	{
-		if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
-		{
-			extendedAddress = txPduData->SduDataPtr[indexCount++];                     // code we7esh we hanshelha 3ashan mabyesta5demhash
-		}
-
-		// txPduData->SduDataPtr[indexCount++] = 1st byte (frame type + flow control flag)
-		switch (txPduData->SduDataPtr[indexCount++] & ISO15765_TPCI_FS_MASK) // checking the flow control flag (Clear To Send=0 , Wait=1, Overflow/abort =2)
-		{
-		case ISO15765_FLOW_CONTROL_STATUS_CTS:
-#if 1
-		{	// This construction is added to make the hcs12 compiler happy.
-			const uint8 bs = txPduData->SduDataPtr[indexCount++];
-			txRuntime->iso15765.BS = bs;
-			txRuntime->iso15765.nextFlowControlCount = bs;
-		}
-		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
-#else
-		txRuntime->iso15765.BS = txPduData->SduDataPtr[indexCount++];
-		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
-		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
-#endif
-		// change state and setup timout
-		txRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(txConfig->CanTpNcs);
-		txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
-		break;
-
-		case ISO15765_FLOW_CONTROL_STATUS_WAIT:
-			txRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(txConfig->CanTpNbs);  /*CanTp: 264*/
-			txRuntime->iso15765.state = TX_WAIT_FLOW_CONTROL;
-			break;
-
-		case ISO15765_FLOW_CONTROL_STATUS_OVFLW:
-			PduR_CanTpRxIndication(txConfig->CanTpRxFcNPdu.CanTpRxFcNPduId, NTFRSLT_E_NOT_OK);       // 27na benehbed ,,,, PduR_PduID
-			txRuntime->iso15765.state = IDLE;
-			txRuntime->mode = CANTP_TX_WAIT;
-			break;
-		}
-	}
-}
-//
-//
-//void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
-//{
-//
-//	const CanTp_RxNSduType *rxConfigParams; // Params reside in ROM.
-//	const CanTp_TxNSduType *txConfigParams;
-//	CanTp_AddressingFormatType addressingFormat; 								// Configured
-//	CanTp_ChannelPrivateType *runtimeParams = 0; // Params reside in RAM.
-//	ISO15765FrameType frameType;
-//	PduIdType CanTpTxNSduId, CanTpRxNSduId;
-//
-//	//Check if PduId is valid
-//	if (CanTpRxPduId >= CANTP_RXID_LIST_SIZE)
-//	{
-//		return;
-//	}
-//
-//	addressingFormat = CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpRxPduId].CanTpTxAddressingFormat;
-//
-//	/* TODO John - Use a different indication of not set than 0xFFFF? */
-//	frameType = getFrameType(addressingFormat, CanTpRxPduPtr);
-//
-//	if( frameType == FLOW_CONTROL_CTS_FRAME )
-//	{
-//		if( CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpRxPduId].CanTpReferringTxIndex != 0xFFFF )
-//		{
-//			CanTpTxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpReferringTxIndex;
-//			//txConfigParams = &CanTpConfig.CanTpNSduList[CanTpTxNSduId].configData.CanTpTxNSdu;
-//			txConfigParams = CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpTxNSduId];
-//			runtimeParams = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
-//		}
-//		else
-//		{
-//			//Invalid FC received
-//			return;
-//		}
-//		rxConfigParams = NULL;
-//	}
-//
-//	else
-//	{
-//		if( CanTp_Config.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex != 0xFFFF )
-//		{
-//			CanTpRxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex;
-//			rxConfigParams = &CanTpConfig.CanTpNSduList[CanTpRxNSduId].configData.CanTpRxNSdu;
-//			runtimeParams = &CanTpRunTimeData.runtimeDataList[rxConfigParams->CanTpRxChannel];
-//		}
-//		else {
-//			//Invalid Frame received
-//			return;
-//		}
-//		txConfigParams = NULL;
-//	}
-//
-//
-//
-//	switch (frameType)
-//	{
-//	case SINGLE_FRAME:
-//	{
-//		if (rxConfigParams != NULL)
-//		{
-//			handleSingleFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
-//		}
-//
-//		break;
-//	}
-//
-//	case FIRST_FRAME:
-//	{
-//		if (rxConfigParams != NULL)
-//		{
-//			handleFirstFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
-//		}
-//		break;
-//	}
-//
-//	case CONSECUTIVE_FRAME:
-//	{
-//		if (rxConfigParams != NULL)
-//		{
-//			handleConsecutiveFrame(rxConfigParams, runtimeParams, CanTpRxPduPtr);
-//		}
-//		break;
-//	}
-//
-//	case FLOW_CONTROL_CTS_FRAME:
-//	{
-//		if (txConfigParams != NULL)
-//		{
-//			handleFlowControlFrame(txConfigParams, runtimeParams, CanTpRxPduPtr);
-//		}
-//		break;
-//	}
-//	case INVALID_FRAME:
-//	{
-//		break;
-//	}
-//
-//	default:
-//		break;
-//	}
-//}
-//
-
-
-static BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize,
-		PduLengthType *bytesWrittenSuccessfully)
-
-{
-
-	BufReq_ReturnType ret = BUFREQ_NOT_OK;
-	bool endLoop = FALSE;
-	*bytesWrittenSuccessfully = 0;
-
-	while ((*bytesWrittenSuccessfully < segmentSize) && (!endLoop))
-	{
-		// Copy the data that resides in the buffer.
-		if (rxRuntime->pdurBuffer != NULL)
-		{
-			while ((*bytesWrittenSuccessfully < segmentSize ) && (rxRuntime->pdurBuffer->SduLength > rxRuntime->pdurBufferCount))
-			{
-				rxRuntime->pdurBuffer->SduDataPtr[rxRuntime->pdurBufferCount++] = segment[(*bytesWrittenSuccessfully)++];
-			}
-		}
-		if (*bytesWrittenSuccessfully < segmentSize )
-		{
-			// We need to request a new buffer from the SDUR.
-			// TODO: We should do a timeout here.
-			ret = PduR_CanTpProvideRxBuffer(rxConfig->CanTpRxNPdu.CanTpRxNPduId, rxRuntime->transferTotal, &rxRuntime->pdurBuffer);
-
-			if (ret == BUFREQ_OK)
-			{
-				rxRuntime->pdurBufferCount = 0;		 			// The buffer is emptied.
-			}
-			else if (ret == BUFREQ_BUSY)
-			{
-				rxRuntime->transferCount += *bytesWrittenSuccessfully;
-				endLoop = TRUE;
-			}
-			else
-			{
-				endLoop = TRUE;									 // Let calling function handle this error.
-			}
-		}
-
-		else
-		{
-			rxRuntime->transferCount += segmentSize; 			//== bytesWrittenSuccessfully
-			ret = BUFREQ_OK;
-			endLoop = TRUE;
-		}
-	}
-	return ret;
-}
-
-
-/* this function coping data and length to tuntime if segementsize < MAX_SEGMENT_DATA_SIZE */
-
-static bool copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize)
-{
-	bool ret = FALSE;
-
-	if ( segmentSize < MAX_SEGMENT_DATA_SIZE )
-	{
-		uint8 i;
-		for (i=0; i < segmentSize; i++)
-		{
-			rxRuntime->canFrameBuffer.data[i] = segment[i];
-		}
-
-		rxRuntime->canFrameBuffer.byteCount = segmentSize;
-		ret = TRUE;
-	}
-	return ret;
-}
-
-
-static PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr)
-{
-	PduLengthType res = 0;
-	uint8 tpci_offset = 0;
-
-
-	 /* to check the format type */
-	switch (*formatType)
-	{
-	case CANTP_STANDARD:
-		tpci_offset = 0;
-		break;
-	case CANTP_EXTENDED:
-		tpci_offset = 1;
-		break;
-	default:
-		return 0;
-	}
-
-	switch (iso15765Frame)
-	{
-	case SINGLE_FRAME:
-		// Parse the data length from the single frame header.
-		res = CanTpRxPduPtr->SduDataPtr[tpci_offset] & ISO15765_TPCI_DL;
-		break;
-	case FIRST_FRAME:
-		// Parse the data length form the first frame.
-		res = CanTpRxPduPtr->SduDataPtr[tpci_offset + 1] + ((PduLengthType)((CanTpRxPduPtr->SduDataPtr[tpci_offset]) & 0xf) << 8);
-		break;
-	default:
-		res = 0;									 // TODO: maybe we should have an error code here.
-		break;
-	}
-	return res;
-}
-
-
-
-
-static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
-{
-	BufReq_ReturnType ret;
-	PduLengthType pduLength;
-	uint8 *data = NULL;
-	PduLengthType bytesWrittenToSduRBuffer;
-
-
-	if (rxRuntime->iso15765.state != IDLE)
-	{
-		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NOT_OK);  // Abort current reception, we need to tell the current receiver it has been aborted.
-	}
-
-	(void) initRx15765RuntimeData(rxRuntime);
-	pduLength = getPduLength(&rxConfig->CanTpRxAddressingFormat, SINGLE_FRAME, rxPduData);                    ////////////////////////////////////////
-
-
-
-	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
-	{
-		data = &rxPduData->SduDataPtr[1];
-	}
-	else
-	{
-		data = &rxPduData->SduDataPtr[2];
-	}
-
-	rxRuntime->transferTotal = pduLength;
-	rxRuntime->iso15765.state = SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER;
-	rxRuntime->mode = CANTP_RX_PROCESSING;
-	rxRuntime->iso15765.stateTimeoutCount = CANTP_CONVERT_MS_TO_MAIN_CYCLES(rxConfig->CanTpNbr);
-
-	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, data, pduLength, &bytesWrittenToSduRBuffer);        /////////////////////////////////////
-
-	if (ret == BUFREQ_OK)
-	{
-		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_OK);
-		rxRuntime->iso15765.state = IDLE;
-		rxRuntime->mode = CANTP_RX_WAIT;
-
-	}
-	else if (ret == BUFREQ_BUSY)
-	{
-		if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
-		{
-			data = &rxPduData->SduDataPtr[1];
-		}
-		else
-		{
-			data = &rxPduData->SduDataPtr[2];
-		}
-		(void)copySegmentToLocalRxBuffer(rxRuntime, data, pduLength ); 									 ///////////////////////////////////////////
-		rxRuntime->iso15765.state = RX_WAIT_SDU_BUFFER;
-		rxRuntime->mode = CANTP_RX_PROCESSING;
-	}
-	else
-	{
-		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NO_BUFFER);
-		rxRuntime->iso15765.state = IDLE;
-		rxRuntime->mode = CANTP_RX_WAIT;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
