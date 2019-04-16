@@ -1,107 +1,222 @@
-/* -------------------------------- Arctic Core ------------------------------
- * Arctic Core - the open source AUTOSAR platform http://arccore.com
- *
- * Copyright (C) 2009  ArcCore AB <contact@arccore.com>
- *
- * This source code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 as published by the
- * Free Software Foundation; See <http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * for more details.
- * -------------------------------- Arctic Core ------------------------------*/
-
-/** @addtogroup TBD
- *  @{ */
-
-/** @file CanTp.h
- * TBD.
- */
-
-/** @req CANTP157 */
-
-#ifndef CANTP_H_
-#define CANTP_H_
-
-#include "Modules.h"
-
-#define CANTP_MODULE_ID				MODULE_ID_CANTP	/** @req CANTP115 */
-#define CANTP_VENDOR_ID				VENDOR_ID_ARCCORE
-
-#define CANTP_SW_MAJOR_VERSION    	1
-#define CANTP_SW_MINOR_VERSION 		0
-#define CANTP_SW_PATCH_VERSION    	0
-#define CANTP_AR_MAJOR_VERSION    	3
-#define CANTP_AR_MINOR_VERSION    	1
-#define CANTP_AR_PATCH_VERSION    	5
-
-#include "ComStack_Types.h"
-#include "Std_Types.h"
-#include "CanTp_Cfg.h"  /** @req CANTP221 */
-/*
- *
- * Errors described by CanTp 7.4 Error classification.
- *
- ****************************/
-/** @req CANTP101 */
-#define CANTP_E_PARAM_CONFIG		0x01
-#define CANTP_E_PARAM_ID			0x02
-#define CANTP_E_PARAM_ADDRESS		0x04
-
-#define CANTP_E_UNINIT				0x20
-#define CANTP_E_INVALID_TX_ID		0x30
-#define CANTP_E_INVALID_RX_ID		0x40
-#define CANTP_E_INVALID_TX_BUFFER	0x50
-#define CANTP_E_INVALID_RX_BUFFER	0x60
-#define CANTP_E_INVALID_TX_LENGHT	0x70
-#define CANTP_E_INVALID_RX_LENGTH	0x80
-#define CANTP_E_INVALID_TATYPE		0x90
-
-/*
- * Service IDs for CanTP function definitions.
- */
-
-#define SERVICE_ID_CANTP_INIT						0x01
-#define SERVICE_ID_CANTP_GET_VERSION_INFO			0x07
-#define SERVICE_ID_CANTP_SHUTDOWN					0x02
-#define SERVICE_ID_CANTP_TRANSMIT					0x03
-#define SERVICE_ID_CANTP_CANCEL_TRANSMIT_REQUEST	0x03
-#define SERVICE_ID_CANTP_MAIN_FUNCTION				0x06
-#define SERVICE_ID_CANTP_RX_INDICATION				0x04
-#define SERVICE_ID_CANTP_TX_CONFIRMATION			0x05
+#ifndef CanTp_H_
+#define CanTp_H_
 
 
-/*
- * Structs
- ****************************/
+
+
+#include "CanTp_Types.h"
+
+#define NULL  					    0
+#define MAX_SEGMENT_DATA_SIZE		8 		// Size of a CAN frame data bytes.
+
+
+/* From Arch code */
+
+
+#define ISO15765_TPCI_MASK      0x30
+#define ISO15765_TPCI_SF        0x00  /* Single Frame */
+#define ISO15765_TPCI_FF        0x10  /* First Frame */
+#define ISO15765_TPCI_CF        0x20  /* Consecutive Frame */
+#define ISO15765_TPCI_FC        0x30  /* Flow Control */
+#define ISO15765_TPCI_DL        0x7   /* Single frame data length mask */
+#define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
+
+//------------------------------------------------------------------------------------------
+
+#define ISO15765_TPCI_MASK      0x30
+#define ISO15765_TPCI_SF        0x00  /* Single Frame */
+#define ISO15765_TPCI_FF        0x10  /* First Frame */
+#define ISO15765_TPCI_CF        0x20  /* Consecutive Frame */
+#define ISO15765_TPCI_FC        0x30  /* Flow Control */
+#define ISO15765_TPCI_DL        0x7   /* Single frame data length mask */
+#define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
+#define CANTP_RXID_LIST_SIZE    8
+#define CANTP_ERR                              -1
+#define ISO15765_FLOW_CONTROL_STATUS_CTS        0
+#define ISO15765_FLOW_CONTROL_STATUS_WAIT       1
+#define ISO15765_FLOW_CONTROL_STATUS_OVFLW      2
+
+//------------------------------------------------------------------------------------------
+
+
+#define MAX_PAYLOAD_SF_STD_ADDR		7
+#define MAX_PAYLOAD_SF_EXT_ADDR		6
+
+#define MAX_PAYLOAD_FF_STD_ADDR		6
+#define MAX_PAYLOAD_FF_EXT_ADDR		5
+
+#define MAX_PAYLOAD_CF_STD_ADDR		7
+#define MAX_PAYLOAD_CF_EXT_ADDR		6
+
+
+//------------------------------------------------------------------------------------------
+#define SEGMENT_NUMBER_MASK			0x0f
+
+
+
+#define TIMER_DECREMENT(timer) \
+		if (timer > 0) { \
+			timer = timer - 1; \
+		} \
+
+#define COUNT_DECREMENT(count) \
+		if (count > 0) { \
+			count = count - 1; \
+		} \
+
+
+//------------------------------------------------------------------------------------------
+
 
 typedef enum {
-	FRTP_CNLDO,
-	FRTP_CNLNB,
-	FRTP_CNLOR
-} FrTp_CancelReasonType;
+	INVALID_FRAME, /* Not specified by ISO15765 - used as error return type when decoding frame. */
+	SINGLE_FRAME, FIRST_FRAME, CONSECUTIVE_FRAME, FLOW_CONTROL_CTS_FRAME, /* Clear to send */
+	FLOW_CONTROL_WAIT_FRAME, FLOW_CONTROL_OVERFLOW_FRAME
+} ISO15765FrameType;
 
 
 
-/*
- * Implemented functions
- ****************************/
 
-void CanTp_Init(void); /** @req CANTP208 **/
-
-#if ( CANTP_VERSION_INFO_API == STD_ON ) /** @req CANTP162 *//** @req CANTP163 */
-#define CanTp_GetVersionInfo(_vi) STD_GET_VERSION_INFO(_vi,CANTP) /** @req CANTP210 */ /* @req CANTP218 */
-#endif /* CANTP_VERSION_INFO_API */
-
-void CanTp_Shutdown(void); /** @req CANTP211 */
-
-Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType * CanTpTxInfoPtr ); /** @req CANTP212 */
-
-Std_ReturnType FrTp_CancelTransmitRequest( PduIdType FrTpTxPduId, FrTp_CancelReasonType FrTpCancelReason ); /** @req CANTP246 */
-
-void CanTp_MainFunction(void); /** @req CANTP213 */
+typedef enum
+{
+	UNINITIALIZED,
+	IDLE,
+	SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER,
+	RX_WAIT_CONSECUTIVE_FRAME,
+	RX_WAIT_SDU_BUFFER,
+	TX_WAIT_STMIN,       /* waits stmin */
+	TX_WAIT_TRANSMIT,
+	TX_WAIT_FLOW_CONTROL,
+	TX_WAIT_TX_CONFIRMATION
+} ISO15765TransferStateTypes;
 
 
-#endif /* CANTP_H_ */
+typedef struct
+{
+	uint8 data[MAX_SEGMENT_DATA_SIZE];
+	PduLengthType byteCount;
+} CanIfSduType;
+
+
+typedef struct {
+	uint16 nextFlowControlCount; 	 // Count down to next Flow Control.
+	uint16 framesHandledCount;		 // Counter keeping track total frames handled.
+	uint32 stateTimeoutCount; 		 // Counter for timeout.
+	uint8 extendedAddress; 			 // Not always used but need to be available.
+	uint8 STmin; 					 // In case we are transmitters the remote node can configure this value (only valid for TX).
+	uint8 BS; 					     // Blocksize (only valid for TX).
+	bool NasNarPending;
+	uint32 NasNarTimeoutCount;		  // CanTpNas, CanTpNar.
+	ISO15765TransferStateTypes state; // Transfer state machine. TODO: Can this be initialized here?
+} ISO15765TransferControlType;
+
+
+//	Container for TX or RX runtime paramters.
+
+typedef struct
+{
+	ISO15765TransferControlType iso15765;
+	PduInfoType *pdurBuffer;				// The PDUR make an instance of this.
+	PduLengthType pdurBufferCount;  		// Number of bytes in PDUR buffer.
+	PduLengthType transferTotal;	    	// Total length of the PDU.
+	PduLengthType transferCount;			// Counter ongoing transfer.
+	CanIfSduType canFrameBuffer;			// Temp storage of SDU data.
+	CanTp_TransferInstanceMode mode;        // mode = { CANTP_RX_WAIT,CANTP_RX_PROCESSING,CANTP_TX_WAIT,CANTP_TX_PROCESSING }
+
+} CanTp_ChannelPrivateType;
+
+
+// Two initiate Functions ---------------------------------------------------------------------------
+
+static void initTx15765RuntimeData(CanTp_ChannelPrivateType *txRuntimeParams)
+{
+	txRuntimeParams->iso15765.state = IDLE;
+	txRuntimeParams->iso15765.NasNarPending = FALSE;
+	txRuntimeParams->iso15765.framesHandledCount = 0;
+	txRuntimeParams->iso15765.nextFlowControlCount = 0;
+	txRuntimeParams->pdurBufferCount = 0;
+	txRuntimeParams->transferTotal = 0;
+	txRuntimeParams->transferCount = 0;
+	txRuntimeParams->mode = CANTP_TX_WAIT;
+	txRuntimeParams->pdurBuffer = NULL;
+}
+
+static void initRx15765RuntimeData(CanTp_ChannelPrivateType *rxRuntimeParams)
+{
+
+	rxRuntimeParams->iso15765.state = IDLE;
+	rxRuntimeParams->iso15765.NasNarPending = FALSE;
+	rxRuntimeParams->iso15765.framesHandledCount = 0;
+	rxRuntimeParams->iso15765.nextFlowControlCount = 0;
+	rxRuntimeParams->pdurBufferCount = 0;
+	rxRuntimeParams->transferTotal = 0;
+	rxRuntimeParams->transferCount = 0;
+	rxRuntimeParams->mode = CANTP_RX_WAIT;
+	rxRuntimeParams->pdurBuffer = NULL;
+}
+
+
+
+
+// - - - - - - - - - - - - - -
+
+typedef struct {
+	bool initRun;
+	CanTp_PaddingActivationType internalState;
+	CanTp_ChannelPrivateType runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE];
+} CanTp_RunTimeDataType;
+
+
+CanTp_RunTimeDataType CanTpRunTimeData =			// Global object
+{ 		.initRun = FALSE,
+		.internalState = CANTP_OFF,
+};
+
+
+
+//prototypes of some functions used .
+
+
+void CanTp_Init( const CanTp_ConfigType* CfgPtr );
+
+
+void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );
+
+
+void CanTp_Shutdown( void );
+
+
+Std_ReturnType CanTp_Transmit( PduIdType TxPduId, const PduInfoType* PduInfoPtr );
+
+////////////////////////////////////////////////////////
+
+// all of the following functions can't be found in the reference code of the company in the .h files
+
+Std_ReturnType CanTp_CancelTransmit( PduIdType TxPduId );  // this one wasn't in the refrence file of the company
+
+Std_ReturnType CanTp_CancelReceive( PduIdType RxPduId ); // also this one
+
+Std_ReturnType CanTp_ChangeParameter( PduIdType id, TPParameterType parameter, uint16 value ); // and this
+
+Std_ReturnType CanTp_ReadParameter( PduIdType id, TPParameterType parameter, uint16* value );
+
+void CanTp_MainFunction( void );
+
+/////////////////////////////////////////////////////////
+
+static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
+static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData);
+static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus);
+void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr);
+static BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize,PduLengthType *bytesWrittenSuccessfully);
+static bool copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize);
+static PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr);
+static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
+
+
+
+
+
+
+
+#endif
