@@ -16,7 +16,7 @@ typedef signed long long      	sint64;
 typedef unsigned long long    	uint64;         /*       0..18446744073709551615  */
 typedef float                 	float32;
 typedef double                	float64;
-//typedef uint16 					PduIdType;        		  /*karim*/
+//typedef uint16 					PduIdType;        		  /*karim*/   Farag commented this line as it should be in CanTp_Types.h
 
 
 

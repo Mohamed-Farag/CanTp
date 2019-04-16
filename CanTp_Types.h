@@ -304,7 +304,7 @@ CanTp_Type  CanTp;
 
 
 
-typedef uint16 			PduIdType;     /*karim*/   //  ( why commented here ? ) .
+typedef uint16 			PduIdType;     /*karim*/
 typedef uint16 				PduLengthType;
 
 typedef float32 TPParameterType;
