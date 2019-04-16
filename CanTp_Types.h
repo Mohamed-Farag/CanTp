@@ -275,7 +275,7 @@ typedef struct
 typedef struct
 {
 
-				uint16 			    	CanTpMainFunctionPeriod;    // this must be a float64, but al float 3mla mshakl (bug)
+				float64 			    CanTpMainFunctionPeriod;
 				uint64 					CanTpMaxChannelCnt;
 				CanTp_ChannelType       CanTpChannel;
 
@@ -296,25 +296,6 @@ CanTp_Type  CanTp;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -323,7 +304,7 @@ CanTp_Type  CanTp;
 
 
 
-//typedef uint16 			PduIdType;     /*karim*/   //  ( why commented here ? ) .
+typedef uint16 			PduIdType;     /*karim*/   //  ( why commented here ? ) .
 typedef uint16 				PduLengthType;
 
 typedef float32 TPParameterType;

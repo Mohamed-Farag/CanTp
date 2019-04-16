@@ -6,7 +6,7 @@
 
 #include "CanTp_Types.h"
 
-#define NULL  					    0
+
 #define MAX_SEGMENT_DATA_SIZE		8 		// Size of a CAN frame data bytes.
 
 
@@ -174,13 +174,13 @@ CanTp_RunTimeDataType CanTpRunTimeData =			// Global object
 
 
 
-//prototypes of some functions used .
+//prototypes of some functions used in sws .
 
 
 void CanTp_Init( const CanTp_ConfigType* CfgPtr );
 
 
-void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );
+//void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );
 
 
 void CanTp_Shutdown( void );
@@ -202,7 +202,7 @@ Std_ReturnType CanTp_ReadParameter( PduIdType id, TPParameterType parameter, uin
 
 void CanTp_MainFunction( void );
 
-/////////////////////////////////////////////////////////
+///////////////////////////////////////Helper Functions not in sws/////////////////////////////////////////////////////////////////
 
 static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
 static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData);

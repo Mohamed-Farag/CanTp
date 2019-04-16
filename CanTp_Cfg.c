@@ -14,40 +14,40 @@
 
 
 
-CanTp_NTaType CanTp_NTa =
+const CanTp_NTaType  CanTp_NTa =
 {
 					 .CanTpNTa = 0,
 
 };
 
-CanTp_NSaType CanTp_NSa =
+const CanTp_NSaType  CanTp_NSa =
 {
 				     .CanTpNSa = 0,
 };
 
 
-CanTp_NAeType CanTpNAe =
+const CanTp_NAeType  CanTpNAe =
 {
 					 .CanTpNAe = 0,
 
 };
 
 
-CanTp_TxNPduType CanTp_TxNPdu =
+const CanTp_TxNPduType  CanTp_TxNPdu =
 {
 					.CanTpTxNPduConfirmationPduId = 0,
 					//const uint32 CanTpTxNPduRef;          // pointer
 };
 
 
-CanTp_TxFcNPduType CanTp_TxFcNPdu =
+const CanTp_TxFcNPduType  CanTp_TxFcNPdu =
 {
 					.CanTpTxFcNPduConfirmationPduId = 0,
 					//const uint16 CanTpRxFcNPduRef;  // pointer
 };
 
 
-CanTp_RxFcNPduType CanTp_RxFcNPdu =
+const CanTp_RxFcNPduType  CanTp_RxFcNPdu =
 {
 		.CanTpRxFcNPduId = 0,
 		//const uint16 CanTpRxFcNPduRef;  // pointer
@@ -70,11 +70,11 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpTxTaType 			  = 				CANTP_PHYSICAL,
 					.CanTpTxChannel           =                 2,
 					//CanTpTxNSduRef;       //pointer
-					.CanTpTxNPdu 			  =					&CanTp_TxNPdu,
-					.CanTpRxFcNPdu			  =				 	&CanTp_TxFcNPdu,
-					.CanTpNTa				  = 				&CanTp_NTa,
-					.CanTpNSa				  =					&CanTp_NSa,
-					.CanTpNAe				  =			        &CanTpNAe,
+					.CanTpTxNPdu 			  =					CanTp_TxNPdu,
+			//		.CanTpRxFcNPdu			  =				 	CanTp_RxFcNPdu,
+					.CanTpNTa				  = 				CanTp_NTa,
+					.CanTpNSa				  =					CanTp_NSa,
+					.CanTpNAe				  =			        CanTpNAe,
 		},
 
 		{
@@ -88,11 +88,11 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpTxTaType 			  =					 CANTP_PHYSICAL,
 					.CanTpTxChannel            =                 2,
 					//CanTpTxNSduRef;         //pointer
-					.CanTpTxNPdu 			  = 			     &CanTp_TxNPdu,
-					.CanTpRxFcNPdu 		      =				     &CanTp_TxFcNPdu,
-					.CanTpNTa 		          = 			     &CanTp_NTa,
-					.CanTpNSa			      = 			     &CanTp_NSa,
-					.CanTpNAe 			      = 				 &CanTpNAe,
+					.CanTpTxNPdu 			  = 			     CanTp_TxNPdu,
+			//		.CanTpRxFcNPdu 		      =				     CanTp_TxFcNPdu,
+					.CanTpNTa 		          = 			     CanTp_NTa,
+					.CanTpNSa			      = 			     CanTp_NSa,
+					.CanTpNAe 			      = 				 CanTpNAe,
 		},
 
 };
@@ -116,11 +116,11 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpRxWftMax				 = 				5,
 				.CanTpSTmin					 = 				TRUE,
 				// .CanTpRxNSduRef 			 = 				TRUE,
-				.CanTpRxNPdu 				 =				&CanTp_TxNPdu,
-				.CanTpTxFcNPdu				 =				&CanTp_TxFcNPdu,
-				.CanTpNTa 					 = 				&CanTp_NTa,
-				.CanTpNSa					 = 				&CanTp_NSa,
-				.CanTpNAe					 = 				&CanTpNAe,
+		//		.CanTpRxNPdu 				 =				CanTp_RxNPdu,
+				.CanTpTxFcNPdu				 =				CanTp_TxFcNPdu,
+				.CanTpNTa 					 = 				CanTp_NTa,
+				.CanTpNSa					 = 				CanTp_NSa,
+				.CanTpNAe					 = 				CanTpNAe,
 
 		},
 
@@ -138,13 +138,13 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpRxWftMax				= 				5,
 				.CanTpSTmin 				= 				TRUE,
 				// .CanTpRxNSduRef 			=				TRUE,
-				.CanTpRxNPdu				=				&CanTp_TxNPdu,
-				.CanTpTxFcNPdu 				=   			&CanTp_TxFcNPdu,
-				.CanTpNTa 					= 				&CanTp_NTa,
-				.CanTpNSa 					= 				&CanTp_NSa,
-				.CanTpNAe 					= 				&CanTpNAe,
+		//		.CanTpRxNPdu				=				CanTp_TxNPdu,
+				.CanTpTxFcNPdu 				=   			CanTp_TxFcNPdu,
+				.CanTpNTa 					= 				CanTp_NTa,
+				.CanTpNSa 					= 				CanTp_NSa,
+				.CanTpNAe 					= 				CanTpNAe,
 
-		},
+		}
 
 };
 
@@ -163,11 +163,12 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 
 
 
-CanTp_ChannelType CanTp_Channel =
+CanTp_ChannelType const CanTp_Channel =
 {
 				.CanTpChannelMode		 =			 CANTP_MODE_FULL_DUPLEX,  // it can also take this value (CANTP_MODE_HALF_DUPLEX)
-				.CanTpRxNSdu			 = 				 &CanTp_RxNSdu,
-				.CanTpTxNSdu			 = 				 &CanTp_TxNSdu,                   // wa2fen l7d hna
+				.direction               =             IS015765_TRANSMIT,
+				.CanTpRxNSdu			 = 				 CanTp_RxNSdu,
+				.CanTpTxNSdu			 = 				 CanTp_TxNSdu,
 };
 
 
@@ -198,7 +199,7 @@ CanTp_ConfigType CanTp_Config =
 {
 			.CanTpMainFunctionPeriod 		= 					1000,
 			.CanTpMaxChannelCnt     		= 					5,
-			.CanTpChannel             		= 					&CanTp_Channel,
+			.CanTpChannel             		= 					CanTp_Channel
 
 };
 

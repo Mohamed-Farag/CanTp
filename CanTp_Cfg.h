@@ -8,8 +8,8 @@
 
 
 
-#define CANTP_NSDU_CONFIG_LIST_SIZE		4
-#define CANTP_NSDU_RUNTIME_LIST_SIZE	4
+#define CANTP_NSDU_CONFIG_LIST_SIZE		2
+#define CANTP_NSDU_RUNTIME_LIST_SIZE	2
 
 
 extern CanTp_ConfigType CanTp_Config;
