@@ -1,10 +1,10 @@
 ///*
 // ============================================================================
-// Name        : cantp.c
+// Name        : CAN Transport Layer
 // Author      : CAN_TP_Team
-// Version     :
+// Version     : AUTOSAR CP Release 4.3.1
 // Copyright   : Your copyright notice
-// Description : Hello World in C, Ansi-style
+// Description : implement the CanTp Module to segment data
 // ============================================================================
 // */
 //
