@@ -24,8 +24,8 @@
 //------------------------------------------------------------------------------------------
 
 #define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
-#define CANTP_RXID_LIST_SIZE    8
-#define CANTP_ERR                              -1
+//#define CANTP_RXID_LIST_SIZE    8
+//#define CANTP_ERR                              -1
 #define ISO15765_FLOW_CONTROL_STATUS_CTS        0
 #define ISO15765_FLOW_CONTROL_STATUS_WAIT       1
 #define ISO15765_FLOW_CONTROL_STATUS_OVFLW      2
@@ -176,17 +176,17 @@ CanTp_RunTimeDataType CanTpRunTimeData =			// Global object
 
 
 
-//prototypes of some functions used in sws .
+/********************************************** Prototypes Of Functions used ********************************************************/
 
 /* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error */
 void CanTp_Init( const CanTp_ConfigType* CfgPtr );
 
 
-//void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );
+//void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );       /* Not Handled Yet */
 
 
 
-/* This Function move the state to CanTp_OFF*/
+/* This Function moves the state to CanTp_OFF*/
 void CanTp_Shutdown( void );
 
 

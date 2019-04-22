@@ -929,7 +929,7 @@ void CanTp_Init( const CanTp_ConfigType* CfgPtr )
 //Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType* PduInfoPtr )  		 // their sws
 
 
-/* this function used to copy the Data Length of the data required to be sent from  PDURBuffer to the CanIF Buffer in SF or SF */
+/* this function used to copy the Data Length of the data required to be sent from  PDURBuffer to the CanIF Buffer in FF or SF */
 Std_ReturnType CanTp_Transmit( PduIdType TxPduId, const PduInfoType* PduInfoPtr )
 {
 	const CanTp_TxNSduType *txConfig = NULL;
