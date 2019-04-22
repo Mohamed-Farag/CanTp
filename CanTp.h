@@ -19,7 +19,7 @@
 #define ISO15765_TPCI_CF        0x20  /* Consecutive Frame */
 #define ISO15765_TPCI_FC        0x30  /* Flow Control */
 #define ISO15765_TPCI_DL        0x7   /* Single frame data length mask */
-#define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
+#define ISO1positio5765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
 
 //------------------------------------------------------------------------------------------
 
@@ -68,10 +68,15 @@
 //------------------------------------------------------------------------------------------
 
 
-typedef enum {
+typedef enum
+{
 	INVALID_FRAME, /* Not specified by ISO15765 - used as error return type when decoding frame. */
-	SINGLE_FRAME, FIRST_FRAME, CONSECUTIVE_FRAME, FLOW_CONTROL_CTS_FRAME, /* Clear to send */
-	FLOW_CONTROL_WAIT_FRAME, FLOW_CONTROL_OVERFLOW_FRAME
+	SINGLE_FRAME,
+	FIRST_FRAME,
+	CONSECUTIVE_FRAME,
+	FLOW_CONTROL_CTS_FRAME, 								/* Clear to send */
+	FLOW_CONTROL_WAIT_FRAME,
+	FLOW_CONTROL_OVERFLOW_FRAME
 } ISO15765FrameType;
 
 
@@ -84,6 +89,7 @@ typedef enum
 	SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER,
 	RX_WAIT_CONSECUTIVE_FRAME,
 	RX_WAIT_SDU_BUFFER,
+
 	TX_WAIT_STMIN,       /* waits stmin */
 	TX_WAIT_TRANSMIT,
 	TX_WAIT_FLOW_CONTROL,
@@ -99,15 +105,16 @@ typedef struct
 
 
 typedef struct {
-	uint16 nextFlowControlCount; 	 // Count down to next Flow Control.
-	uint16 framesHandledCount;		 // Counter keeping track total frames handled.
-	uint32 stateTimeoutCount; 		 // Counter for timeout.
-	uint8 extendedAddress; 			 // Not always used but need to be available.
-	uint8 STmin; 					 // In case we are transmitters the remote node can configure this value (only valid for TX).
-	uint8 BS; 					     // Blocksize (only valid for TX).
+	uint16 nextFlowControlCount; 		 // Count down to next Flow Control.
+	uint16 framesHandledCount;			 // Counter keeping track total frames handled.
+	uint32 stateTimeoutCount; 			 // Counter for timeout.
+	uint8 extendedAddress; 				 // Not always used but need to be available.
+	uint8 STmin; 						 // In case we are transmitters the remote node can configure this value (only valid for TX).
+	uint8 BS; 					   		 // Blocksize (only valid for TX).
 	bool NasNarPending;
-	uint32 NasNarTimeoutCount;		  // CanTpNas, CanTpNar.
-	ISO15765TransferStateTypes state; // Transfer state machine. TODO: Can this be initialized here?
+	uint32 NasNarTimeoutCount;			 // CanTpNas, CanTpNar.
+	ISO15765TransferStateTypes state;
+	// Transfer state machine. TODO: Can this be initialized here?
 } ISO15765TransferControlType;
 
 
@@ -120,7 +127,7 @@ typedef struct
 	PduLengthType pdurBufferCount;  		// Number of bytes in PDUR buffer.
 	PduLengthType transferTotal;	    	// Total length of the PDU.
 	PduLengthType transferCount;			// Counter ongoing transfer.
-	CanIfSduType canFrameBuffer;			// Temp storage of SDU data.
+	CanIfSduType canFrameBuffer;			// Temp storage of SDU data.   { data , ByteCount }
 	CanTp_TransferInstanceMode mode;        // mode = { CANTP_RX_WAIT,CANTP_RX_PROCESSING,CANTP_TX_WAIT,CANTP_TX_PROCESSING }
 
 } CanTp_ChannelPrivateType;
@@ -160,7 +167,8 @@ static void initRx15765RuntimeData(CanTp_ChannelPrivateType *rxRuntimeParams)
 
 // - - - - - - - - - - - - - -
 
-typedef struct {
+typedef struct
+{
 	bool initRun;
 	CanTp_PaddingActivationType internalState;
 	CanTp_ChannelPrivateType runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE];
@@ -205,7 +213,8 @@ Std_ReturnType CanTp_ReadParameter( PduIdType id, TPParameterType parameter, uin
 void CanTp_MainFunction( void );
 
 ///////////////////////////////////////Helper Functions not in sws/////////////////////////////////////////////////////////////////
-
+static void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
+static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
 static void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
 static void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData);
 static void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus);
@@ -217,8 +226,8 @@ static bool copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint
 
 /* This Fuction is used to get the length of the PDU from N_PCI */
 static PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr);
-static void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
 
+static ISO15765FrameType getFrameType(const CanTp_AddressingFormatType *formatType,const PduInfoType *CanTpRxPduPtr);
 
 
 

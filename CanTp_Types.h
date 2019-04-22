@@ -229,7 +229,7 @@ typedef struct
 						const float64 CanTpNbr;										// Value in seconds of the performance requirement for (N_Br + N_Ar). N_Br is the elapsed time between the receiving indication of a FF or CF , until the transmit request of the next FC.
 						const float64 CanTpNcr;										// Value in seconds of the N_Cr timeout. N_Cr is the time until reception of the next Consecutive Frame N_PDU.
 						CanTp_AddressingFormatType	CanTpRxAddressingFormat;		// Declares which communication addressing mode is supported for this RxNSdu. Definition of Enumeration values
-						uint16 CanTpRxNSduId;										// Unique identifier user by the upper layer to call CanTp_CancelReceive, CanTp_ChangeParameter and CanTp_ReadParameter.
+						uint16 CanTpRxNSduId;	/*hnb3t dah ll com bs hnb3t al map bta3to   */									// Unique identifier user by the upper layer to call CanTp_CancelReceive, CanTp_ChangeParameter and CanTp_ReadParameter.
 						const CanTp_PaddingActivationType CanTpRxPaddingActivation; // Defines if the receive frame uses padding or not. ( see sws for more info)
 						CanTp_TaType CanTpRxTaType;									// Declares the communication type of this TxNsdu.
 						const uint8 CanTpRxChannel; 								// Connection to runtime variable index. ( not included in sws ) .
@@ -238,7 +238,7 @@ typedef struct
 
 					    //CanTpRxNSduRef;  // pointer								// Reference to a Pdu in the COM-Stack.
 
-						CanTp_RxNPduType CanTpRxNPdu;     							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU consumes a meta data item of type CAN_ID_32.
+						CanTp_RxNPduType CanTpRxNPdu;   /*a7ot feh ay 7aga ana 3ayzha w mno ageb al index*/  							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU consumes a meta data item of type CAN_ID_32.
 						CanTp_TxFcNPduType CanTpTxFcNPdu; 							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
 						CanTp_NTaType CanTpNTa;           							// This container is required for each RxNSdu and TxNSdu with AddressingFormat CANTP_EXTENDED. When DynIdSupport is enabled, this container is also required for each RxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT. When DynIdSupport is enabled and GenericConnectionSupport is not enabled, this container is also required for each TxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT.
 						CanTp_NSaType CanTpNSa;           							// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED. When DynIdSupport is enabled, this container is also required for each TxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT. When DynIdSupport is enabled and GenericConnectionSupport is not enabled, this container is also required for each RxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT.

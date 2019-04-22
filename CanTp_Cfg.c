@@ -82,17 +82,17 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpNbs 				  =					 0,
 					.CanTpNcs 				  =					 0,
 					.CanTpTc				  =					 TRUE,
-					.CanTpTxAddressingFormat  =  				 CANTP_EXTENDED,
-					.CanTpTxNSduId            =					 0,
+					.CanTpNAe 			      = 				 CanTpNAe,
+					.CanTpTxAddressingFormat  =  				 CANTP_STANDARD,
+					.CanTpTxNSduId            =					 1,
 					.CanTpTxPaddingActivation =  				 CANTP_OFF,
 					.CanTpTxTaType 			  =					 CANTP_PHYSICAL,
-					.CanTpTxChannel            =                 2,
+					.CanTpTxChannel            =                 3,
 					//CanTpTxNSduRef;         //pointer
 					.CanTpTxNPdu 			  = 			     CanTp_TxNPdu,
 			//		.CanTpRxFcNPdu 		      =				     CanTp_TxFcNPdu,
 					.CanTpNTa 		          = 			     CanTp_NTa,
 					.CanTpNSa			      = 			     CanTp_NSa,
-					.CanTpNAe 			      = 				 CanTpNAe,
 		},
 
 };
@@ -109,9 +109,9 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpNbr					 = 				FALSE,
 				.CanTpNcr 					 = 				FALSE,
 				.CanTpRxAddressingFormat 	 = 				CANTP_EXTENDED,    // THIS IS AN ENUMERATOR IT CAN HAVE ONE	OF THE FOLLOWING VALUES {CANTP_EXTENDED , CANTP_MIXED , CANTP_MIXED29BIT , CANTP_NORMALFIXED ,  CANTP_STANDARD}
-				.CanTpRxNSduId 				 =			 	3,
+				.CanTpRxNSduId 				 =			 	0,
 				.CanTpRxPaddingActivation 	 =				CANTP_OFF,		 // THIS IS AN ENUMERATOR IT AN HAVE ONEOF THE FOLLOWING VALUES {CANTP_OFF, CANTP_ON}
-				.CanTpRxChannel              =              2,
+				.CanTpRxChannel              =              0,
 				.CanTpRxTaType				 =				CANTP_FUNCTIONAL,            // you can put either one of these values on the ENUM {CANTP_FUNCTIONAL, CANTP_PHYSICAL}
 				.CanTpRxWftMax				 = 				5,
 				.CanTpSTmin					 = 				TRUE,
@@ -130,10 +130,10 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpNar 					=				FALSE,
 				.CanTpNbr				    = 				FALSE,
 				.CanTpNcr					= 				FALSE,
-				.CanTpRxAddressingFormat    =  				CANTP_EXTENDED,    // THIS IS AN ENUMERATOR IT CAN HAVE ONE	OF THE FOLLOWING VALUES {CANTP_EXTENDED , CANTP_MIXED , CANTP_MIXED29BIT , CANTP_NORMALFIXED ,  CANTP_STANDARD}
-				.CanTpRxNSduId 				= 				3,
+				.CanTpRxAddressingFormat    =  				CANTP_STANDARD,    // THIS IS AN ENUMERATOR IT CAN HAVE ONE	OF THE FOLLOWING VALUES {CANTP_EXTENDED , CANTP_MIXED , CANTP_MIXED29BIT , CANTP_NORMALFIXED ,  CANTP_STANDARD}
+				.CanTpRxNSduId 				= 				1,
 				.CanTpRxPaddingActivation   = 				CANTP_ON,		 // THIS IS AN ENUMERATOR IT AN HAVE ONEOF THE FOLLOWING VALUES {CANTP_OFF, CANTP_ON}
-				.CanTpRxChannel             =               2,
+				.CanTpRxChannel             =               1,
 				.CanTpRxTaType				= 				CANTP_PHYSICAL,            // you can put either one of these values on the ENUM {CANTP_FUNCTIONAL, CANTP_PHYSICAL}
 				.CanTpRxWftMax				= 				5,
 				.CanTpSTmin 				= 				TRUE,
@@ -166,7 +166,7 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 CanTp_ChannelType const CanTp_Channel =
 {
 				.CanTpChannelMode		 =			 CANTP_MODE_FULL_DUPLEX,  // it can also take this value (CANTP_MODE_HALF_DUPLEX)
-				.direction               =             IS015765_TRANSMIT,
+				.direction               =             ISO15765_RECEIVE,
 				.CanTpRxNSdu			 = 				 CanTp_RxNSdu,
 				.CanTpTxNSdu			 = 				 CanTp_TxNSdu,
 };

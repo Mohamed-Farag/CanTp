@@ -3,7 +3,7 @@
 
 #define TRUE   1
 #define FALSE  0
-
+#define NULL   0
 
 typedef unsigned char           bool;
 typedef unsigned char         	uint8;          /*           0 .. 255             */
