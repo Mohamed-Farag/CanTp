@@ -224,7 +224,7 @@ static BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rx
 		if (*BytesWrittenSuccessfully < segmentSize )
 		{
 			/*request a new buffer from the SDUR.*/
-			/* startofreception hya hya PduR_CanTpProvideRxBuffer */ /* I should do mapping to id here */
+			/* startofreception === PduR_CanTpProvideRxBuffer */ /* I should do mapping to id here */
 			return_value = PduR_CanTpProvideRxBuffer(rxConfig->CanTpRxNPdu.CanTpRxNPduId, rxRuntime->transferTotal, &rxRuntime->pdurBuffer);
 
 			/* just for protection, timeout should be added here but not necessary, the program should run well without it*/

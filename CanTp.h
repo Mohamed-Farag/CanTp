@@ -23,12 +23,6 @@
 
 //------------------------------------------------------------------------------------------
 
-#define ISO15765_TPCI_MASK      0x30
-#define ISO15765_TPCI_SF        0x00  /* Single Frame */
-#define ISO15765_TPCI_FF        0x10  /* First Frame */
-#define ISO15765_TPCI_CF        0x20  /* Consecutive Frame */
-#define ISO15765_TPCI_FC        0x30  /* Flow Control */
-#define ISO15765_TPCI_DL        0x7   /* Single frame data length mask */
 #define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
 #define CANTP_RXID_LIST_SIZE    8
 #define CANTP_ERR                              -1
