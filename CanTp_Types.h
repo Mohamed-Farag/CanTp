@@ -13,8 +13,7 @@
 #define CANTP_TYPES_H_
 
 
-#include "Std_Types.h"
-
+#include <includes/Std_Types.h>
 
 
 typedef uint8 NotifResultType;
@@ -103,7 +102,7 @@ typedef enum
 
 
 /*IN comstack.h */
-
+//
 typedef enum
 {
 	BUFREQ_OK,
@@ -122,14 +121,14 @@ typedef enum
 typedef struct
 {
 
-	bool CanTpChangeParameterApi;			 // This parameter, if set to true, enables the CanTp_ChangeParameterRequest Api for this Module.
-	bool CanTpDevErrorDetect;		   		 // Switches the development error detection and notification on or off.
-	bool CanTpDynIdSupport ;		    	 // Enable support for dynamic ID handling via N-PDU MetaData.
-	bool CanTpFlexibleDataRateSupport ;      // Enable support for CAN FD frames.
-	bool CanTpGenericConnectionSupport;      // Enable support for the handling of generic connections using N-SDUs with MetaData. Requires CanTpDynIdSupport.
+	boolean CanTpChangeParameterApi;			 // This parameter, if set to true, enables the CanTp_ChangeParameterRequest Api for this Module.
+	boolean CanTpDevErrorDetect;		   		 // Switches the development error detection and notification on or off.
+	boolean CanTpDynIdSupport ;		    	 // Enable support for dynamic ID handling via N-PDU MetaData.
+	boolean CanTpFlexibleDataRateSupport ;      // Enable support for CAN FD frames.
+	boolean CanTpGenericConnectionSupport;      // Enable support for the handling of generic connections using N-SDUs with MetaData. Requires CanTpDynIdSupport.
 	uint8 CanTpPaddingByte;                  // Used for the initialization of unused bytes with a certain value
-	bool CanTpReadParameterApi;				 // This parameter, if set to true, enables the CanTp_ReadParameterApi for this module.
-	bool CanTpVersionInfoApi;                // The function CanTp_GetVersionInfo is configurable (On/Off) by this configuration parameter.
+	boolean CanTpReadParameterApi;				 // This parameter, if set to true, enables the CanTp_ReadParameterApi for this module.
+	boolean CanTpVersionInfoApi;                // The function CanTp_GetVersionInfo is configurable (On/Off) by this configuration parameter.
 
 }CanTp_GeneralType;
 
@@ -202,16 +201,16 @@ typedef struct
 					const float64 CanTpNas;											// Value in second of the N_As timeout. N_As is the time for transmission of a CAN frame (any N_PDU) on the part of the sender.
 					const float64 CanTpNbs;											// Value in seconds of the N_Bs timeout. N_Bs is the time of transmission until reception of the next Flow Control N_PDU.
 					const float64 CanTpNcs;											// Value in seconds of the performance requirement of (N_Cs + N_As). N_Cs is the time in which CanTp is allowed to request the Tx data of a Consecutive Frame N_PDU.
-					bool CanTpTc;													// Switch for enabling Transmit Cancellation.
+					boolean CanTpTc;													// Switch for enabling Transmit Cancellation.
 					CanTp_AddressingFormatType CanTpTxAddressingFormat;				// Declares which communication addressing format is supported for this TxNSdu.
 					uint16 CanTpTxNSduId;											// Unique identifier to a structure that contains all useful information to process the transmission of a TxNsdu.
 					const CanTp_PaddingActivationType CanTpTxPaddingActivation;		// Defines if the transmit frame use padding or not. This parameter is restricted to 8 byte N-PDUs. ( see sws for more info )
 					CanTp_TaType CanTpTxTaType;										// Declares the communication type of this TxNsdu. ( see sws for more info page 88 )
-					const uint8 CanTpTxChannel; 									// Connection to runtime variable index. ( not included in sws )
+					uint8 CanTpTxChannel; 									// Connection to runtime variable index. ( not included in sws )
 
 					//	    CanTpTxNSduRef;         	//pointer					// Reference to a Pdu in the COM-Stack.
 
-					CanTp_TxNPduType CanTpTxNPdu;     								// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
+					const CanTp_TxNPduType CanTpTxNPdu;     								// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
 					CanTp_RxFcNPduType CanTpRxFcNPdu; 								// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU consumes a meta data item of type CAN_ID_32.
 					CanTp_NTaType CanTpNTa;          								// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED.
 					CanTp_NSaType CanTpNSa;          								// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED.
@@ -232,14 +231,14 @@ typedef struct
 						uint16 CanTpRxNSduId;	/*hnb3t dah ll com bs hnb3t al map bta3to   */									// Unique identifier user by the upper layer to call CanTp_CancelReceive, CanTp_ChangeParameter and CanTp_ReadParameter.
 						const CanTp_PaddingActivationType CanTpRxPaddingActivation; // Defines if the receive frame uses padding or not. ( see sws for more info)
 						CanTp_TaType CanTpRxTaType;									// Declares the communication type of this TxNsdu.
-						const uint8 CanTpRxChannel; 								// Connection to runtime variable index. ( not included in sws ) .
+						uint8 CanTpRxChannel; 								// Connection to runtime variable index. ( not included in sws ) .
 						const uint16 CanTpRxWftMax;									// This parameter indicates how many Flow Control wait N-PDUs can be consecutively transmitted by the receiver. It is local to the node and is not transmitted inside the FC protocol data unit.CanTpRxWftMax is used to avoid sender nodes being potentially hooked-up in case of a temporarily reception inability on the part of the receiver nodes, whereby the sender could be waiting continuously.
 						const float64 CanTpSTmin;									// Sets the duration of the minimum time the CanTp sender shall wait between the transmissions of two CF N-PDUs.
 
 					    //CanTpRxNSduRef;  // pointer								// Reference to a Pdu in the COM-Stack.
 
 						CanTp_RxNPduType CanTpRxNPdu;   /*a7ot feh ay 7aga ana 3ayzha w mno ageb al index*/  							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU consumes a meta data item of type CAN_ID_32.
-						CanTp_TxFcNPduType CanTpTxFcNPdu; 							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
+						const CanTp_TxFcNPduType CanTpTxFcNPdu; 							// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
 						CanTp_NTaType CanTpNTa;           							// This container is required for each RxNSdu and TxNSdu with AddressingFormat CANTP_EXTENDED. When DynIdSupport is enabled, this container is also required for each RxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT. When DynIdSupport is enabled and GenericConnectionSupport is not enabled, this container is also required for each TxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT.
 						CanTp_NSaType CanTpNSa;           							// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED. When DynIdSupport is enabled, this container is also required for each TxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT. When DynIdSupport is enabled and GenericConnectionSupport is not enabled, this container is also required for each RxNSdu with AddressingFormat CANTP_NORMALFIXED or CANTP_MIXED29BIT.
 						CanTp_NAeType CanTpNAe;           							// This container is required for each RxNSdu and TxNSdu with AddressingFormat CANTP_MIXED or CANTP_MIXED29BIT.
@@ -254,7 +253,7 @@ typedef struct
 typedef struct
 {
 
-				CanTp_ChannelModeType   CanTpChannelMode;		// The CAN Transport Layer supports half and full duplex channel modes.
+				const CanTp_ChannelModeType   CanTpChannelMode;		// The CAN Transport Layer supports half and full duplex channel modes.
 				const CanTp_DirectionType direction;			// Tx or Rx
 				const CanTp_RxNSduType *CanTpRxNSdu;   			//Subcontainer
 				const CanTp_TxNSduType *CanTpTxNSdu;   			//Subcontainer
@@ -277,7 +276,8 @@ typedef struct
 
 				float64 			    CanTpMainFunctionPeriod;
 				uint64 					CanTpMaxChannelCnt;
-				CanTp_ChannelType       CanTpChannel;
+				uint8                        direction;
+				const CanTp_ChannelType       CanTpChannel;
 
 }CanTp_ConfigType;
 
@@ -333,6 +333,8 @@ RetryInfoType
 TPParameterType    ( OK )
 
 */
+
+
 
 
 

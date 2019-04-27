@@ -13,51 +13,50 @@
 
 
 
-
-const CanTp_NTaType  CanTp_NTa =
+ CanTp_NTaType  CanTp_NTa =
 {
 					 .CanTpNTa = 0,
 
 };
 
-const CanTp_NSaType  CanTp_NSa =
+ CanTp_NSaType  CanTp_NSa =
 {
 				     .CanTpNSa = 0,
 };
 
 
-const CanTp_NAeType  CanTpNAe =
+ CanTp_NAeType  CanTpNAe =
 {
 					 .CanTpNAe = 0,
 
 };
 
 
-const CanTp_TxNPduType  CanTp_TxNPdu =
+ CanTp_TxNPduType  CanTp_TxNPdu =
 {
 					.CanTpTxNPduConfirmationPduId = 0,
-					//const uint32 CanTpTxNPduRef;          // pointer
+					// uint32 CanTpTxNPduRef;          // pointer
 };
 
 
-const CanTp_TxFcNPduType  CanTp_TxFcNPdu =
+ const CanTp_TxFcNPduType  CanTp_TxFcNPdu =
 {
 					.CanTpTxFcNPduConfirmationPduId = 0,
-					//const uint16 CanTpRxFcNPduRef;  // pointer
+					// uint16 CanTpRxFcNPduRef;  // pointer
 };
 
 
-const CanTp_RxFcNPduType  CanTp_RxFcNPdu =
+ CanTp_RxFcNPduType  CanTp_RxFcNPdu =
 {
 		.CanTpRxFcNPduId = 0,
-		//const uint16 CanTpRxFcNPduRef;  // pointer
+		// uint16 CanTpRxFcNPduRef;  // pointer
 
 };
 
 
 
 
-CanTp_TxNSduType CanTp_TxNSdu[] =
+const CanTp_TxNSduType CanTp_TxNSdu[] =
 {
 		{
 					.CanTpNas 			      = 				0,
@@ -70,11 +69,22 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpTxTaType 			  = 				CANTP_PHYSICAL,
 					.CanTpTxChannel           =                 2,
 					//CanTpTxNSduRef;       //pointer
-					.CanTpTxNPdu 			  =					CanTp_TxNPdu,
+					.CanTpTxNPdu 			  =					{
+					             			                    .CanTpTxNPduConfirmationPduId = 0,
+					             			                    // uint32 CanTpTxNPduRef;          // pointer
+					             			},
 			//		.CanTpRxFcNPdu			  =				 	CanTp_RxFcNPdu,
-					.CanTpNTa				  = 				CanTp_NTa,
-					.CanTpNSa				  =					CanTp_NSa,
-					.CanTpNAe				  =			        CanTpNAe,
+					.CanTpNTa				  = 				{
+					         				                     .CanTpNTa = 0,
+
+					         				},
+					.CanTpNSa				  =					{
+					         				                     .CanTpNSa = 0,
+					         				},
+					.CanTpNAe				  =			        {
+					         				                     .CanTpNAe = 0,
+
+					         				},
 		},
 
 		{
@@ -82,17 +92,28 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpNbs 				  =					 0,
 					.CanTpNcs 				  =					 0,
 					.CanTpTc				  =					 TRUE,
-					.CanTpNAe 			      = 				 CanTpNAe,
+					.CanTpNAe 			      = 				 {
+					          			                        .CanTpNAe = 0,
+
+					          			   },
 					.CanTpTxAddressingFormat  =  				 CANTP_STANDARD,
 					.CanTpTxNSduId            =					 1,
 					.CanTpTxPaddingActivation =  				 CANTP_OFF,
 					.CanTpTxTaType 			  =					 CANTP_PHYSICAL,
 					.CanTpTxChannel            =                 3,
 					//CanTpTxNSduRef;         //pointer
-					.CanTpTxNPdu 			  = 			     CanTp_TxNPdu,
+					.CanTpTxNPdu 			  = 			     {
+					             			                     .CanTpTxNPduConfirmationPduId = 0,
+					             			                     // uint32 CanTpTxNPduRef;          // pointer
+					             			 },
 			//		.CanTpRxFcNPdu 		      =				     CanTp_TxFcNPdu,
-					.CanTpNTa 		          = 			     CanTp_NTa,
-					.CanTpNSa			      = 			     CanTp_NSa,
+					.CanTpNTa 		          = 			     {
+					          		                            .CanTpNTa = 0,
+
+					          		       },
+					.CanTpNSa			      = 			     {
+					         			                         .CanTpNSa = 0,
+					         			    },
 		},
 
 };
@@ -100,14 +121,14 @@ CanTp_TxNSduType CanTp_TxNSdu[] =
 
 
 
-CanTp_RxNSduType CanTp_RxNSdu[] =
+const CanTp_RxNSduType CanTp_RxNSdu[] =
 {
 		{
 				//.CanTpRxNSdu				 = 				 0,    // why is this written here ??? do you have any idea ??
 				.CanTpBs					 =				 0,
-				.CanTpNar					 = 				FALSE,
-				.CanTpNbr					 = 				FALSE,
-				.CanTpNcr 					 = 				FALSE,
+				.CanTpNar					 = 				1,
+				.CanTpNbr					 = 				2,
+				.CanTpNcr 					 = 				3,
 				.CanTpRxAddressingFormat 	 = 				CANTP_EXTENDED,    // THIS IS AN ENUMERATOR IT CAN HAVE ONE	OF THE FOLLOWING VALUES {CANTP_EXTENDED , CANTP_MIXED , CANTP_MIXED29BIT , CANTP_NORMALFIXED ,  CANTP_STANDARD}
 				.CanTpRxNSduId 				 =			 	0,
 				.CanTpRxPaddingActivation 	 =				CANTP_OFF,		 // THIS IS AN ENUMERATOR IT AN HAVE ONEOF THE FOLLOWING VALUES {CANTP_OFF, CANTP_ON}
@@ -117,19 +138,30 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpSTmin					 = 				TRUE,
 				// .CanTpRxNSduRef 			 = 				TRUE,
 		//		.CanTpRxNPdu 				 =				CanTp_RxNPdu,
-				.CanTpTxFcNPdu				 =				CanTp_TxFcNPdu,
-				.CanTpNTa 					 = 				CanTp_NTa,
-				.CanTpNSa					 = 				CanTp_NSa,
-				.CanTpNAe					 = 				CanTpNAe,
+				.CanTpTxFcNPdu				 =				{
+				              			                    .CanTpTxFcNPduConfirmationPduId = 0,
+				              			                    // uint16 CanTpRxFcNPduRef;  // pointer
+				              			},
+				.CanTpNTa 					 = 				{
+				          				                     .CanTpNTa = 0,
+
+				          				},
+				.CanTpNSa					 = 				{
+				         				                     .CanTpNSa = 0,
+				         				},
+				.CanTpNAe					 = 				{
+				         				                     .CanTpNAe = 0,
+
+				         				},
 
 		},
 
 		{
 				//.CanTpRxNSdu 				=				 0,    // why is this written here ??? do you have any idea ??
 				.CanTpBs 					= 				 0,
-				.CanTpNar 					=				FALSE,
-				.CanTpNbr				    = 				FALSE,
-				.CanTpNcr					= 				FALSE,
+				.CanTpNar 					=				3,
+				.CanTpNbr				    = 				4,
+				.CanTpNcr					= 				6,
 				.CanTpRxAddressingFormat    =  				CANTP_STANDARD,    // THIS IS AN ENUMERATOR IT CAN HAVE ONE	OF THE FOLLOWING VALUES {CANTP_EXTENDED , CANTP_MIXED , CANTP_MIXED29BIT , CANTP_NORMALFIXED ,  CANTP_STANDARD}
 				.CanTpRxNSduId 				= 				1,
 				.CanTpRxPaddingActivation   = 				CANTP_ON,		 // THIS IS AN ENUMERATOR IT AN HAVE ONEOF THE FOLLOWING VALUES {CANTP_OFF, CANTP_ON}
@@ -139,10 +171,22 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 				.CanTpSTmin 				= 				TRUE,
 				// .CanTpRxNSduRef 			=				TRUE,
 		//		.CanTpRxNPdu				=				CanTp_TxNPdu,
-				.CanTpTxFcNPdu 				=   			CanTp_TxFcNPdu,
-				.CanTpNTa 					= 				CanTp_NTa,
-				.CanTpNSa 					= 				CanTp_NSa,
-				.CanTpNAe 					= 				CanTpNAe,
+				.CanTpTxFcNPdu 				=
+				{
+                    .CanTpTxFcNPduConfirmationPduId = 0,
+                                                        // uint16 CanTpRxFcNPduRef;  // pointer
+				 },
+				.CanTpNTa 					= 				{
+				          				                     .CanTpNTa = 0,
+
+				          				},
+				.CanTpNSa 					= 				{
+				          				                     .CanTpNSa = 0,
+				          				},
+				.CanTpNAe 					= 				{
+				          				                     .CanTpNAe = 0,
+
+				          				}
 
 		}
 
@@ -163,7 +207,7 @@ CanTp_RxNSduType CanTp_RxNSdu[] =
 
 
 
-CanTp_ChannelType const CanTp_Channel =
+CanTp_ChannelType  CanTp_Channel =
 {
 				.CanTpChannelMode		 =			 CANTP_MODE_FULL_DUPLEX,  // it can also take this value (CANTP_MODE_HALF_DUPLEX)
 				.direction               =             ISO15765_RECEIVE,
@@ -188,20 +232,29 @@ CanTp_GeneralType CanTp_General =
 			 .CanTpGenericConnectionSupport  = 	        	FALSE,
 			 .CanTpPaddingByte               = 				10,
 			 .CanTpReadParameterApi          = 				FALSE,
-			 .CanTpVersionInfoApi            = 				FALSE,
+			 .CanTpVersionInfoApi            = 				FALSE
 
 };
 
 
 /*This is only for Testing */
 
-CanTp_ConfigType CanTp_Config =
+const CanTp_ConfigType CanTp_Config =
 {
-			.CanTpMainFunctionPeriod 		= 					1000,
+			.CanTpMainFunctionPeriod 		= 					5,
 			.CanTpMaxChannelCnt     		= 					5,
-			.CanTpChannel             		= 					CanTp_Channel
+			.direction                       =                   1,
+			.CanTpChannel             		=
+			{
+			     .CanTpChannelMode        =           CANTP_MODE_FULL_DUPLEX,  // it can also take this value (CANTP_MODE_HALF_DUPLEX)
+			     .direction               =             ISO15765_RECEIVE,
+			     .CanTpRxNSdu             =               CanTp_RxNSdu,
+			     .CanTpTxNSdu             =               CanTp_TxNSdu,
+			}
 
 };
+// - - - - - - - - - - - - - -
+
 
 
 //
