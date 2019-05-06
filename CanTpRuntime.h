@@ -118,6 +118,7 @@ typedef struct
     PduLengthType transferCount;            // Counter ongoing transfer.
     CanIfSduType canFrameBuffer;            // Temp storage of SDU data.   { data , ByteCount }
     CanTp_TransferInstanceMode mode;        // mode = { CANTP_RX_WAIT,CANTP_RX_PROCESSING,CANTP_TX_WAIT,CANTP_TX_PROCESSING }
+    PduLengthType Buffersize;               // size of buffer in com module.
 
 } CanTp_ChannelPrivateType;
 

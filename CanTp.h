@@ -6,10 +6,15 @@
 #include "CanTpRuntime.h"
 
 
-void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result);
 
-BufReq_ReturnType PduR_CanTpProvideRxBuffer(PduIdType id, PduLengthType length,
-		PduInfoType **PduInfoPtr);
+BufReq_ReturnType PduR_CanTpStartOfReception(PduIdType id,PduInfoType *info,PduLengthType length,PduLengthType *Buffersize);
+
+
+BufReq_ReturnType PduR_CanTpCopyRxData(PduIdType id,PduInfoType *info,PduLengthType *Buffersize);
+
+
+
+void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result);
 
 
 

@@ -13,6 +13,25 @@
 extern CanTp_RunTimeDataType CanTpRunTimeData;
 extern CanTp_ConfigType CanTp_Config;
 
+/*************************************************** Helper Functions ************************************************************/
+
+Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, PduInfoType *PduInfoPtr)
+{
+	if (rxConfig->CanTpRxPaddingActivation == CANTP_ON)
+	{
+		uint8 i = 0;
+		for ( i = PduInfoPtr->SduLength; i < MAX_SEGMENT_DATA_SIZE; i++)
+		{
+			PduInfoPtr->SduDataPtr[i] = 0x0;
+		}
+		PduInfoPtr->SduLength = MAX_SEGMENT_DATA_SIZE;
+	}
+	rxRuntime->iso15765.NasNarTimeoutCount = (rxConfig->CanTpNar);
+	rxRuntime->iso15765.NasNarPending = TRUE;
+
+//	return CanIf_Transmit(rxConfig->CanIf_FcPduId, PduInfoPtr);
+	return E_OK;
+}
 
 /*
  * This function copies the segment to PduR Receiving Buffer, requests a new buffer from the SDUR if needed,
@@ -51,78 +70,44 @@ extern CanTp_ConfigType CanTp_Config;
  *
  */
 
-/*************************************************** Helper Functions ************************************************************/
 //ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, data, pduLength, &bytesWrittenToSduRBuffer);
 
 BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 													CanTp_ChannelPrivateType *rxRuntime,
-																	   uint8 *segment,         // data
-																PduLengthType segmentSize,	   // pduLength
-																PduLengthType *BytesWrittenSuccessfully)   // bytesWrittenToSduRBuffer
+																PduInfoType *info,         // { Data , length }
+																PduLengthType segmentSize )	   // pduLength
 {
 
 	BufReq_ReturnType return_value = BUFREQ_NOT_OK;
-	boolean endLoop = FALSE;
-	*BytesWrittenSuccessfully = 0;
 
-	while ((*BytesWrittenSuccessfully < segmentSize) && (!endLoop))
-	{
-		/*copy the data in the buffer as long as loop is not ended and there`s a room for copying*/
 
-		if (rxRuntime->pdurBuffer != NULL)
+
+		/* copy the data in the buffer as long as loop there`s a room for copying */
+
+
+			return_value = PduR_CanTpStartOfReception(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,rxRuntime->transferTotal,&rxRuntime->Buffersize);
+
+
+		/* return form  PduR_CanTpStartOfReception */
+
+		if (return_value == BUFREQ_OK)
 		{
-			/* the first condition to loop on all data and the second one to loop until the length of pdurBuffer */
-			while ((*BytesWrittenSuccessfully < segmentSize ) && (rxRuntime->pdurBuffer->SduLength > rxRuntime->pdurBufferCount))
-			{
-			//	rxRuntime->pdurBuffer->SduDataPtr[rxRuntime->pdurBufferCount++] = segment[(*BytesWrittenSuccessfully)++];/* copying Data to pdurBuffer this is became out of my socpe  */
-			//	PduR_CanTpCopyRxData(id,info,Buffersize)
-			//	PduR_CanTpCopyRxData(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,Buffersize)
-			}
+
+			return_value = PduR_CanTpCopyRxData(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,&rxRuntime->Buffersize);
+
 		}
-
-		if (*BytesWrittenSuccessfully < segmentSize )
-		{
-			/* We need to request a new buffer from the SDUR. */
-			/* TODO: We should do a timeout here.*/
-			/* PduR_CanTpStartOfReception === PduR_CanTpProvideRxBuffer */				 //TODO: I should do mapping to id here
-
-			return_value = PduR_CanTpProvideRxBuffer(rxConfig->CanTpRxNPdu.CanTpRxNPduId, rxRuntime->transferTotal, &rxRuntime->pdurBuffer);   // old
-			//PduR_CanTpStartOfReception(id,info,TpSduLength,bufferSizePtr);               // New
-
-			/*
-			 *  tmam ana fhmt an al mfrood al  PduR_CanTpProvideRxBuffer t5le al pdurBuffer->SduLength = value
-			 * (a3takd an al value de hya al rxRuntime->transferTotal )
-			 * w kman al pdurBffer yeshawer 3la value msh NULL
-			 */
-
-			/* just for protection, timeout should be added here but not necessary, the program should run well without it*/
-
-			if (return_value == BUFREQ_OK)
-			{
-				/*new buffer request is successfully completed*/
-				rxRuntime->pdurBufferCount = 0;  				 /*Empty the buffer.*/
-			}
 
 			else if (return_value == BUFREQ_BUSY)
 			{
-				rxRuntime->transferCount += *BytesWrittenSuccessfully;
-				endLoop = TRUE;
+
 			}
 
 			else	 /* in case of BUFREQ_NOT_OK or BUFREQ_OVFL */
 			{
-				endLoop = TRUE; /*###### This error must be handled while calling the function ######*/
+
 			}
 
-		}
 
-		else                /* all Bytes written successfully ^^ */
-		{
-			rxRuntime->transferCount += segmentSize; 	/*== BytesWrittenSuccessfully*/
-			return_value = BUFREQ_OK;
-			endLoop = TRUE;
-		}
-	}
 	return return_value;
 }
 
@@ -285,8 +270,9 @@ void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType
 {
 	BufReq_ReturnType ret;
 	PduLengthType pduLength;
-	uint8 *data = NULL;                       /* will points to the data without the first byte in case of standard  */
-	PduLengthType bytesWrittenToSduRBuffer;
+	PduInfoType *info = NULL;
+	uint8 * data = rxPduData;
+
 
 
 	if (rxRuntime->iso15765.state != IDLE)
@@ -301,11 +287,11 @@ void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType
 
 	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
 	{
-		data = &rxPduData->SduDataPtr[1];
+		info->SduDataPtr = &rxPduData->SduDataPtr[1];
 	}
 	else								/* in case of Extended Addressing format */
 	{
-		data = &rxPduData->SduDataPtr[2];
+		info->SduDataPtr = &rxPduData->SduDataPtr[2];
 	}
 
 	rxRuntime->transferTotal = pduLength;                /* copying length to runtime */
@@ -313,7 +299,7 @@ void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType
 	rxRuntime->mode = CANTP_RX_PROCESSING;
 	rxRuntime->iso15765.stateTimeoutCount = (rxConfig->CanTpNbr);
 
-	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, data, pduLength, &bytesWrittenToSduRBuffer);
+	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, info, pduLength);
 
 	if (ret == BUFREQ_OK)
 	{
@@ -350,8 +336,9 @@ void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType
 void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
 {
 	BufReq_ReturnType ret;
-	PduLengthType pduLength = 0;
-	PduLengthType bytesWrittenToSduRBuffer;
+	PduLengthType pduLength;
+	PduInfoType *info = rxPduData;
+
 
 	if (rxRuntime->iso15765.state != IDLE)
 	{
@@ -363,11 +350,14 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 	rxRuntime->transferTotal = pduLength;
 
 
+
+
 	// Validate that that there is a reason for using the segmented transfers and
 	// if not simply skip (single frame should have been used).
 	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
 	{
-		if (pduLength <= MAX_PAYLOAD_SF_STD_ADDR){
+		if (pduLength <= MAX_PAYLOAD_SF_STD_ADDR)
+		{
 			return;
 		}
 	}
@@ -378,26 +368,38 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 			return;
 		}
 	}
+
 	// Validate that the SDU is full length in this first frame.
 	if (rxPduData->SduLength < MAX_SEGMENT_DATA_SIZE)
 	{
 		return;
 	}
 
+	/* point the data to correct byte  */
+
+	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
+	{
+		info->SduDataPtr = &rxPduData->SduDataPtr[2];
+	}
+	else								/* in case of Extended Addressing format */
+	{
+		info->SduDataPtr = &rxPduData->SduDataPtr[3];
+	}
+
+
+
 	rxRuntime->iso15765.framesHandledCount = 1; // Segment count begins with 1 (FirstFrame has the 0).
 	rxRuntime->iso15765.state = SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER;
 	rxRuntime->mode = CANTP_RX_PROCESSING;
 	rxRuntime->iso15765.stateTimeoutCount = (rxConfig->CanTpNbr); /** @req CANTP166 */
 
-	if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
+
+	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,MAX_PAYLOAD_FF_STD_ADDR);
+
+
+
+	if (ret == BUFREQ_OK)
 	{
-		ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,&rxPduData->SduDataPtr[2],MAX_PAYLOAD_FF_STD_ADDR,&bytesWrittenToSduRBuffer);
-	}
-	else
-	{
-		ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,&rxPduData->SduDataPtr[3],MAX_PAYLOAD_FF_EXT_ADDR,&bytesWrittenToSduRBuffer);
-	}
-	if (ret == BUFREQ_OK) {
 		rxRuntime->iso15765.stateTimeoutCount = (rxConfig->CanTpNcr);
 		rxRuntime->iso15765.state = RX_WAIT_CONSECUTIVE_FRAME;
 		rxRuntime->mode = CANTP_RX_PROCESSING;
@@ -405,7 +407,8 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 	}
 	else if (ret == BUFREQ_BUSY)
 	{
-		if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD) {
+		if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
+		{
 			(void)copySegmentToLocalRxBuffer(rxRuntime, &rxPduData->SduDataPtr[2], MAX_PAYLOAD_FF_STD_ADDR );
 		}
 		else
@@ -488,6 +491,9 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 	PduLengthType bytesCopiedToPdurRxBuffer = 0;
 	BufReq_ReturnType ret = BUFREQ_NOT_OK;
 
+	PduInfoType *info = rxPduData;
+
+
 	if (rxRuntime->iso15765.state == RX_WAIT_CONSECUTIVE_FRAME)
 	{
 		if (rxConfig->CanTpRxAddressingFormat == CANTP_EXTENDED)
@@ -516,7 +522,10 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 				currentSegmentSize = currentSegmentMaxSize; // 6 or 7, depends on addressing format used.
 			}
 			// Copy received data to buffer provided by SDUR.
-			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,&rxPduData->SduDataPtr[indexCount],currentSegmentSize, &bytesCopiedToPdurRxBuffer);
+			info->SduDataPtr = rxPduData->SduDataPtr[indexCount];
+			info->SduLength = 	rxPduData->SduLength;
+
+			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,currentSegmentSize);
 
 			if (ret == BUFREQ_NOT_OK) {
 				PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NO_BUFFER);
@@ -656,7 +665,7 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 	}
 
 
-//	ret = canReceivePaddingHelper(rxConfig, rxRuntime, &pduInfo);       // pduinfo contains pointer to data and data length
+	ret = canReceivePaddingHelper(rxConfig, rxRuntime, &pduInfo);       // pduinfo contains pointer to data and data length
 
 	if (ret != E_OK)
 	{

@@ -8,6 +8,7 @@
 //// ============================================================================
 //// */
 //
+/* add this line to test github bash */
 #include <CanTP/CanTpRuntime.h>
 #include <CanTP/Helper_Functions.h>
 #include <stdio.h>
@@ -49,6 +50,7 @@ void initRx15765RuntimeData(CanTp_ChannelPrivateType *rxRuntimeParams)
     rxRuntimeParams->transferCount = 0;
     rxRuntimeParams->mode = CANTP_RX_WAIT;
     rxRuntimeParams->pdurBuffer = NULL;
+    rxRuntimeParams->Buffersize = 0;
 }
 
 /************************************************** Stup Functions ***********************************************************/
@@ -59,14 +61,24 @@ void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result)
 
 }
 
-
-BufReq_ReturnType PduR_CanTpProvideRxBuffer(PduIdType id, PduLengthType length,
-		PduInfoType **PduInfoPtr)
+BufReq_ReturnType PduR_CanTpStartOfReception(PduIdType id,PduInfoType *info,PduLengthType length,PduLengthType *Buffersize)
 {
+	*Buffersize = 40;
 	return BUFREQ_OK;
 }
 
+BufReq_ReturnType PduR_CanTpCopyRxData(PduIdType id,PduInfoType *info,PduLengthType *Buffersize)
+{
 
+	*Buffersize = 30;
+	return BUFREQ_OK;
+}
+
+//
+//Std_ReturnType CanIf_Transmit(const CanTp_RxNSduType, PduInfoPtr)
+//{
+//
+//}
 
 
 void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
@@ -489,7 +501,7 @@ void CanTp_MainFunction(void)
 
 					 /* copies from local buffer to PDUR buffer. */
 					ret = copySegmentToPduRRxBuffer(rxConfigListItem,rxRuntimeListItem,rxRuntimeListItem->canFrameBuffer.data,rxRuntimeListItem->canFrameBuffer.byteCount
-							,&bytesWrittenToSduRBuffer);
+							);
 					bytesRemaining = rxRuntimeListItem->transferTotal -  rxRuntimeListItem->transferCount;
 					if (bytesRemaining > 0)
 					{
