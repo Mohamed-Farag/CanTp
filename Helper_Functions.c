@@ -78,15 +78,17 @@ BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 																PduLengthType segmentSize )	   // pduLength
 {
 
-	BufReq_ReturnType return_value = BUFREQ_NOT_OK;
+	BufReq_ReturnType return_value = BUFREQ_OK;
 
 
 
 		/* copy the data in the buffer as long as loop there`s a room for copying */
 
+	if (rxRuntime->Buffersize == 0)
+	{
 
-			return_value = PduR_CanTpStartOfReception(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,rxRuntime->transferTotal,&rxRuntime->Buffersize);
-
+		return_value = PduR_CanTpStartOfReception(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,rxRuntime->transferTotal,&rxRuntime->Buffersize);
+	}
 
 		/* return form  PduR_CanTpStartOfReception */
 
@@ -532,11 +534,13 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 
 			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,currentSegmentSize);
 
-			if (ret == BUFREQ_NOT_OK) {
+			if (ret == BUFREQ_NOT_OK)
+			{
 				PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NO_BUFFER);
 				rxRuntime->iso15765.state = IDLE;
 				rxRuntime->mode = CANTP_RX_WAIT;
 			}
+
 			else if (ret == BUFREQ_BUSY)
 			{
 				boolean dataCopyFailure = FALSE;
