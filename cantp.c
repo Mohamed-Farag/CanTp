@@ -199,9 +199,9 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 
 
 
-///****************************************************** Primitive Functions *********************************************************/
-//
-///* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error */
+///****************************************************** Primitive Functions *********************************************************///
+
+///* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error *///
 void CanTp_Init( const CanTp_ConfigType* CfgPtr )
 {
 

@@ -75,7 +75,7 @@ Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_C
 BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 													CanTp_ChannelPrivateType *rxRuntime,
 																PduInfoType *info,         // { Data , length }
-																PduLengthType segmentSize )	   // pduLength
+																PduLengthType segmentSize )	   // pduLength         /* i think this shoudl be removed sooner */
 {
 
 	BufReq_ReturnType return_value = BUFREQ_OK;
@@ -84,7 +84,7 @@ BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 
 		/* copy the data in the buffer as long as loop there`s a room for copying */
 
-	if (rxRuntime->Buffersize == 0)
+	if (rxRuntime->Buffersize == 0)          /* in case of SF and FF only */
 	{
 
 		return_value = PduR_CanTpStartOfReception(rxConfig->CanTpRxNPdu.CanTpRxNPduId,info,rxRuntime->transferTotal,&rxRuntime->Buffersize);
@@ -480,7 +480,7 @@ void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivat
 	}
 }
 
-
+/* TODO: this fuction requires a lot of change */
 void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
 {
 	uint8 indexCount = 0;
@@ -581,9 +581,10 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 				bytesLeftToTransfer = rxRuntime->transferTotal - rxRuntime->transferCount;
 				if (bytesLeftToTransfer > 0)
 				{
-					rxRuntime->iso15765.framesHandledCount++;                  // hanzawed 3adad el frames elly 2tna2alet
-					COUNT_DECREMENT(rxRuntime->iso15765.nextFlowControlCount); // han2alel 3adad el frames elly fadla 3ala  el next flow control
+					rxRuntime->iso15765.framesHandledCount++;                 	  // hanzawed 3adad el frames elly 2tna2alet
+					COUNT_DECREMENT(rxRuntime->iso15765.nextFlowControlCount); 	  // han2alel 3adad el frames elly fadla 3ala  el next flow control
 
+					/* Now You should send the next flow control if the conditions is True */
 					if (rxRuntime->iso15765.nextFlowControlCount == 0  && rxRuntime->iso15765.BS > 0)
 					{
 						sendFlowControlFrame(rxConfig, rxRuntime, BUFREQ_OK);
