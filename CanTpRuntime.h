@@ -93,7 +93,8 @@ typedef struct
 } CanIfSduType;
 
 
-typedef struct {
+typedef struct
+{
     uint16 nextFlowControlCount;         // Count down to next Flow Control.
     uint16 framesHandledCount;           // Counter keeping track total frames handled.
     uint32 stateTimeoutCount;            // Counter for timeout.
