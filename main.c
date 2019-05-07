@@ -72,6 +72,7 @@ TASK(T1) // every 1 sec
 TASK(T2) // every 5 sec
 {
     // Transmit();
+
 	uint8 Array1[] = {0x10,0x0C,'M','o','h','a','m','e'};   	//{SF,FF
 	uint8 Array2[] = {0x21, 'd' ,'F','a','r','a','g'};          /* segment number = 1 */
 	PduInfoType FF;
