@@ -99,15 +99,15 @@ BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 
 		}
 
-			else if (return_value == BUFREQ_BUSY)
-			{
+		else if (return_value == BUFREQ_BUSY)
+		{
 
-			}
+		}
 
-			else	 /* in case of BUFREQ_NOT_OK or BUFREQ_OVFL */
-			{
+		else	 /* in case of BUFREQ_NOT_OK or BUFREQ_OVFL */
+		{
 
-			}
+		}
 
 
 	return return_value;
@@ -349,7 +349,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 
 	(void) initRx15765RuntimeData(rxRuntime);                         /* I think this line is useless */
 	pduLength = getPduLength(&rxConfig->CanTpRxAddressingFormat, FIRST_FRAME,rxPduData);
-	rxRuntime->transferTotal = pduLength;
+	rxRuntime->transferTotal = pduLength;                     // 12
 
 
 
@@ -372,7 +372,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 	}
 
 	// Validate that the SDU is full length in this first frame.
-	if (rxPduData->SduLength < MAX_SEGMENT_DATA_SIZE)
+	if (rxPduData->SduLength < MAX_SEGMENT_DATA_SIZE)        /* we edit this f
 	{
 		return;
 	}
@@ -388,7 +388,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 		info->SduDataPtr = &rxPduData->SduDataPtr[3];
 	}
 
-
+	info->SduLength = info->SduLength - 2 ;
 
 	rxRuntime->iso15765.framesHandledCount = 1;			 // Segment count begins with 1 (FirstFrame has the 0).
 	rxRuntime->iso15765.state = SF_OR_FF_RECEIVED_WAITING_PDUR_BUFFER;
@@ -407,6 +407,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 		rxRuntime->mode = CANTP_RX_PROCESSING;
 		sendFlowControlFrame(rxConfig, rxRuntime, ret);
 	}
+
 	else if (ret == BUFREQ_BUSY)
 	{
 		if (rxConfig->CanTpRxAddressingFormat == CANTP_STANDARD)
@@ -531,6 +532,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 			// Copy received data to buffer provided by SDUR.
 			info->SduDataPtr = &rxPduData->SduDataPtr[indexCount];
 
+			info->SduLength = info->SduLength - 1;
 
 			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,currentSegmentSize);
 
@@ -613,7 +615,7 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 	uint8 indexCount = 0;
 	Std_ReturnType ret = E_NOT_OK;
 	PduInfoType pduInfo;
-	uint8 sduData[8];				 // Note that buffer is declared on the stack.
+	uint8 sduData[8];				  		  // Note that buffer is declared on the stack.
 	uint16 spaceFreePduRBuffer = 0;
 	uint16 computedBs = 0;
 
