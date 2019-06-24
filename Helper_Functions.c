@@ -10,10 +10,48 @@
 #include "MemMap.h"
 #include "Det.h"
 
+
 extern CanTp_RunTimeDataType CanTpRunTimeData;
 extern CanTp_ConfigType CanTp_Config;
 
+
+
+BufReq_ReturnType PduR_CanTpCopyTxData(PduIdType TxPduId , PduInfoType* PduInfoPtr , uint8 Retry , PduLengthType* availableDataSize)
+{
+	uint8 Array[] = {'M','o','h','a','m','e','d','F','a','r','a','g'};
+	PduInfoPtr->SduDataPtr = Array;
+	return BUFREQ_OK;
+
+}
+
+Std_ReturnType CanIf_TransmitForTest(PduIdType CanTxPduId,const PduInfoType* PduInfoPtr)
+{
+
+	return E_OK;
+}
+
 /*************************************************** Helper Functions ************************************************************/
+
+
+Std_ReturnType canTansmitPaddingHelper(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime,PduInfoType *PduInfoPtr)
+
+{
+	if (txConfig->CanTpTxPaddingActivation == CANTP_ON)
+	{
+		uint8 i = 0;
+		for (i = PduInfoPtr->SduLength; i < MAX_SEGMENT_DATA_SIZE; i++)
+		{
+			PduInfoPtr->SduDataPtr[i] = 0x00;
+		}
+
+		PduInfoPtr->SduLength = MAX_SEGMENT_DATA_SIZE;
+	}
+	txRuntime->iso15765.NasNarTimeoutCount =(txConfig->CanTpNas);
+	txRuntime->iso15765.NasNarPending = TRUE;
+
+	return CanIf_TransmitForTest(txConfig->CanTpTxNSduId, PduInfoPtr);
+}
+
 
 Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, PduInfoType *PduInfoPtr)
 {
@@ -29,8 +67,8 @@ Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_C
 	rxRuntime->iso15765.NasNarTimeoutCount = (rxConfig->CanTpNar);  // Value in seconds of the N_Ar timeout. N_Ar is the time for transmission of a CAN frame (any N_PDU) on the receiver side.
 	rxRuntime->iso15765.NasNarPending = TRUE;
 
-//	return CanIf_Transmit(rxConfig->CanIf_FcPduId, PduInfoPtr);
-	return E_OK;
+	return CanIf_TransmitForTest(1, PduInfoPtr);
+//	return E_OK;
 }
 
 /*
@@ -372,7 +410,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 	}
 
 	// Validate that the SDU is full length in this first frame.
-	if (rxPduData->SduLength < MAX_SEGMENT_DATA_SIZE)        /* we edit this f
+	if (rxPduData->SduLength < MAX_SEGMENT_DATA_SIZE)
 	{
 		return;
 	}
@@ -443,25 +481,33 @@ void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivat
 	{
 		if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
 		{
-			extendedAddress = txPduData->SduDataPtr[indexCount++];                     // code we7esh we hanshelha 3ashan mabyesta5demhash
+			extendedAddress = txPduData->SduDataPtr[indexCount++];                     // code we7esh 3ashan mabyesta5demhash
 		}
 
 		// txPduData->SduDataPtr[indexCount++] = 1st byte (frame type + flow control flag)
 		switch (txPduData->SduDataPtr[indexCount++] & ISO15765_TPCI_FS_MASK) // checking the flow control flag (Clear To Send=0 , Wait=1, Overflow/abort =2)
 		{
 		case ISO15765_FLOW_CONTROL_STATUS_CTS:
-#if 1
-		{	// This construction is added to make the hcs12 compiler happy.
+//#if 1
+    if(1)
+		{	// This construction is added to make the hcs12 compiler happy. And i remobe it ^^ .
 			const uint8 bs = txPduData->SduDataPtr[indexCount++];
 			txRuntime->iso15765.BS = bs;
 			txRuntime->iso15765.nextFlowControlCount = bs;
 		}
 		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
-#else
-		txRuntime->iso15765.BS = txPduData->SduDataPtr[indexCount++];
-		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
-		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
-#endif
+
+/* i don't know what is the benefit from it at all */
+////#else
+//   else
+//	{
+//		txRuntime->iso15765.BS = txPduData->SduDataPtr[indexCount++];
+//		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
+//		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
+//     //#endif
+//	}
+
+
 		// change state and setup timout
 		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNcs);
 		txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
@@ -473,7 +519,7 @@ void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivat
 			break;
 
 		case ISO15765_FLOW_CONTROL_STATUS_OVFLW:
-			PduR_CanTpRxIndication(txConfig->CanTpRxFcNPdu.CanTpRxFcNPduId, NTFRSLT_E_NOT_OK);       // 27na benehbed ,,,, PduR_PduID
+			//PduR_CanTpRxIndication(txConfig->CanTpRxFcNPdu.CanTpRxFcNPduId, NTFRSLT_E_NOT_OK);       // 27na benehbed ,,,, PduR_PduID
 			txRuntime->iso15765.state = IDLE;
 			txRuntime->mode = CANTP_TX_WAIT;
 			break;
@@ -505,7 +551,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 		}
 
 		// getting consecutive frame number
-		segmentNumber = rxPduData->SduDataPtr[indexCount++] & SEGMENT_NUMBER_MASK;      //segment number equals consecutive frame index (3..0 bits in first byte)
+		segmentNumber = rxPduData->SduDataPtr[indexCount++] & SEGMENT_NUMBER_MASK;      //	segment number equals consecutive frame index (3..0 bits in first byte)
 
 		// checking if this consecutive frame is handled
 		if (segmentNumber != (rxRuntime->iso15765.framesHandledCount & SEGMENT_NUMBER_MASK))
@@ -608,8 +654,81 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 } 					// 438, 550 PC-lint: extendedAdress not accessed. Extended adress needs to be implemented. Ticket #136
 
 
+void handleNextTxFrameSent(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime)
+{
+	txRuntime->iso15765.framesHandledCount++;
+
+	// prepare tx buffer for next frame
+	txRuntime->canFrameBuffer.byteCount = 1;
+
+	if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
+	{
+		txRuntime->canFrameBuffer.byteCount++;
+	}
+
+	txRuntime->canFrameBuffer.data[txRuntime->canFrameBuffer.byteCount - 1] = (txRuntime->iso15765.framesHandledCount & SEGMENT_NUMBER_MASK) + ISO15765_TPCI_CF;
+	COUNT_DECREMENT(txRuntime->iso15765.nextFlowControlCount);
+
+	if (txRuntime->transferTotal <= txRuntime->transferCount)
+	{
+		// Transfer finished!
+		//PduR_CanTpTxConfirmation(txConfig->PduR_PduId, NTFRSLT_OK);
+		txRuntime->iso15765.state = IDLE;
+		txRuntime->mode = CANTP_TX_WAIT;
+	}
+
+	else if (txRuntime->iso15765.nextFlowControlCount == 0 && txRuntime->iso15765.BS)
+	{
+		// receiver expects flow control.
+		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNbs);
+		txRuntime->iso15765.state = TX_WAIT_FLOW_CONTROL;
+
+	}
+
+	else if (txRuntime->iso15765.STmin == 0)
+	{
+		// Send next consecutive frame!
+		Std_ReturnType resp;
+		resp = sendNextTxFrame(txConfig, txRuntime);
+		if (resp == BUFREQ_OK )
+		{
+			// successfully sent frame, wait for tx confirm
+		} else if(BUFREQ_BUSY == resp)
+		{
+			// change state and setup timeout
+			txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNcs);
+			txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
+		}
+		else
+		{
+			//PduR_CanTpTxConfirmation(txConfig->PduR_PduId, NTFRSLT_E_NOT_OK);
+			txRuntime->iso15765.state = IDLE;
+			txRuntime->mode = CANTP_TX_WAIT;
+		}
+	}
+	else
+	{
+		// Send next consecutive frame after stmin!
+		//ST MIN error handling ISO 15765-2 sec 7.6
+		if (txRuntime->iso15765.STmin < 0x80)
+		{
+			txRuntime->iso15765.stateTimeoutCount = (txRuntime->iso15765.STmin) + 1;
+		}
+		else if (txRuntime->iso15765.STmin > 0xF0 && txRuntime->iso15765.STmin < 0xFA)
+		{
+			txRuntime->iso15765.stateTimeoutCount = 1; //0.1 ms resoultion needs a lower task period. So hard coded to 1 main cycle
+		}
+		else
+		{
+			txRuntime->iso15765.stateTimeoutCount = (0x7F) + 1;
+		}
+		txRuntime->iso15765.state = TX_WAIT_STMIN;
+	}
+}
+
 /****************************************************** sending  Frames **************************************************************/
 
+/* this function for sending the flow control */
 void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus)
 {
 	uint8 indexCount = 0;
@@ -633,7 +752,7 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 	{
 		sduData[indexCount++] = ISO15765_TPCI_FC | ISO15765_FLOW_CONTROL_STATUS_CTS;        	// change the value of control flag (clear to send)
 
-		spaceFreePduRBuffer = rxRuntime->pdurBuffer->SduLength - rxRuntime->pdurBufferCount;  /* TODO: I think this would be bufferSize directly */
+		spaceFreePduRBuffer = rxRuntime->pdurBuffer.SduLength - rxRuntime->pdurBufferCount;	  /* TODO: I think this would be bufferSize directly */
 
 
 
@@ -651,8 +770,8 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 			computedBs = rxConfig->CanTpBs;
 		}
 
-		sduData[indexCount++] = computedBs;
-		sduData[indexCount++] = (uint8) rxConfig->CanTpSTmin;
+		sduData[indexCount++] = computedBs;                                     // putting BlockSize in the Byte #2
+		sduData[indexCount++] = (uint8) rxConfig->CanTpSTmin;				    // putting BlockSize in the Byte #3
 		rxRuntime->iso15765.nextFlowControlCount = computedBs;
 		pduInfo.SduLength = indexCount;                           	  // indexcount here = 3
 		break;
@@ -682,7 +801,7 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 
 	if (ret != E_OK)
 	{
-		PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NOT_OK);
+		//PduR_CanTpRxIndication(rxConfig->CanTpRxNPdu.CanTpRxNPduId, NTFRSLT_E_NOT_OK);
 		rxRuntime->iso15765.state = IDLE;
 		rxRuntime->mode = CANTP_RX_WAIT;
 	}
@@ -694,65 +813,116 @@ BufReq_ReturnType sendNextTxFrame(const CanTp_TxNSduType *txConfig, CanTp_Channe
 {
 	BufReq_ReturnType ret = BUFREQ_OK;
 
+	uint8 Retry = 0;
+
+	// txRuntime->canFrameBuffer.byteCount = 0    a3tkd lazm ndef al satr dah 3shan al consecutive frame
+
 	// copy data to temp buffer
 	for(; txRuntime->canFrameBuffer.byteCount < MAX_SEGMENT_DATA_SIZE && ret == BUFREQ_OK ;)
 	{
 			/* al if de bthandle lw fe mshakel */
-		if(txRuntime->pdurBuffer == NULL || txRuntime->pdurBufferCount == txRuntime->pdurBuffer->SduLength)   /* lw msh byshawer 3la data aw pdurBufferCount == SduLength */
+		if(txRuntime->pdurBuffer.SduDataPtr == NULL || txRuntime->pdurBufferCount == txRuntime->pdurBuffer.SduLength)   /*second condition is: pdurBufferCount == SduLength */
 		{
+			// a3tkd bardo an lw awl condtion at722 yb2a dah SF or FF ,Lakn lw tany condtion ally at772 yb2a CF .. w mn hna mmkn 2fr2 benhom
 			// data empty, request new data
-//			ret = PduR_CanTpProvideTxBuffer(txConfig->PduR_PduId, &txRuntime->pdurBuffer, 0);
+
+			if (txRuntime->availableDataSize == 0)           /* in case of SF or FF */
+			{
+				ret = PduR_CanTpCopyTxData(txConfig->CanTpTxNSduId,&txRuntime->pdurBuffer,Retry,&txRuntime->availableDataSize);
+			}
+
+			if (txConfig->CanTpTxAddressingFormat == CANTP_STANDARD)          /* in case of standard */
+			{
+				if (txRuntime->availableDataSize > MAX_PAYLOAD_SF_STD_ADDR)	     /* in case of Full CF */
+				{
+					txRuntime->pdurBuffer.SduLength = MAX_PAYLOAD_SF_STD_ADDR;
+					ret = PduR_CanTpCopyTxData(txConfig->CanTpTxNSduId,&txRuntime->pdurBuffer,Retry,&txRuntime->availableDataSize);
+				}
+
+				else if (txRuntime->availableDataSize <= MAX_PAYLOAD_SF_STD_ADDR)	/* in case of Last CF */
+				{
+					txRuntime->pdurBuffer.SduLength = txRuntime->availableDataSize;
+					ret = PduR_CanTpCopyTxData(txConfig->CanTpTxNSduId,&txRuntime->pdurBuffer,Retry,&txRuntime->availableDataSize);
+				}
+
+			}
+
+
+			else			  /* in case of Extended */
+			{
+				if (txRuntime->availableDataSize > MAX_PAYLOAD_SF_STD_ADDR)	     /* in case of Full CF */
+				{
+					txRuntime->pdurBuffer.SduLength = MAX_PAYLOAD_SF_STD_ADDR;
+					ret = PduR_CanTpCopyTxData(txConfig->CanTpTxNSduId,&txRuntime->pdurBuffer,Retry,&txRuntime->availableDataSize);
+				}
+
+				else if (txRuntime->availableDataSize <= MAX_PAYLOAD_SF_STD_ADDR)	/* in case of Last CF */
+				{
+					txRuntime->pdurBuffer.SduLength = txRuntime->availableDataSize;
+					ret = PduR_CanTpCopyTxData(txConfig->CanTpTxNSduId,&txRuntime->pdurBuffer,Retry,&txRuntime->availableDataSize);
+				}
+			}
+
+
+		}       // end of if condition
+
+
+
 			txRuntime->pdurBufferCount = 0;
 			if(ret == BUFREQ_OK)
 			{
 				// new data received
-//				VALIDATE( txRuntime->pdurBuffer->SduDataPtr != NULL,
-//						SERVICE_ID_CANTP_TRANSMIT, CANTP_E_INVALID_TX_BUFFER );
 			}
 			else
 			{
 				// failed to receive new data
-				txRuntime->pdurBuffer = NULL;
+				txRuntime->pdurBuffer.SduDataPtr = NULL;
 				break;
 			}
-		}
+
 
 		 /* copying Data from pdurBuffer to canFrameBuffer and all in runtime */
 		txRuntime->canFrameBuffer.data[txRuntime->canFrameBuffer.byteCount++] =
-				txRuntime->pdurBuffer->SduDataPtr[txRuntime->pdurBufferCount++];
+																				txRuntime->pdurBuffer.SduDataPtr[txRuntime->pdurBufferCount++];
+
+
 		txRuntime->transferCount++;            /* increase the transfer count */
 
-		if(txRuntime->transferCount == txRuntime->transferTotal)     /* check that we copy all Bytes in the PDU */
+		if(txRuntime->transferCount == txRuntime->transferTotal)     /* for small bytes so the condition break here */
 		 {
 			// all bytes, send
 			break;
 		}
 	}
 
-/* here company handle Tx_Confirmation and we don't need this right Now
- *	if(ret == BUFREQ_OK)
- *	{
- * 		PduInfoType pduInfo;
- *		Std_ReturnType resp;
- *		pduInfo.SduDataPtr = txRuntime->canFrameBuffer.data;
- *		pduInfo.SduLength = txRuntime->canFrameBuffer.byteCount;
- *
- *		// change state to verify tx confirm within timeout
- *		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNas);
- *		txRuntime->iso15765.state = TX_WAIT_TX_CONFIRMATION;
- *		resp = canTansmitPaddingHelper(txConfig, txRuntime, &pduInfo);
- *		if(resp == E_OK) {
- *			// sending done
- *		} else {
- *			// failed to send
- *			ret = BUFREQ_NOT_OK;
- *		}
- *	}
- */
-	return ret;
+
+
+
+// here company handle Tx_Confirmation and we don't need this right Now
+ 	if(ret == BUFREQ_OK)
+	{
+ 		PduInfoType pduInfo;
+		Std_ReturnType resp;
+		pduInfo.SduDataPtr = txRuntime->canFrameBuffer.data;
+		pduInfo.SduLength = txRuntime->canFrameBuffer.byteCount;
+
+		// change state to verify tx confirm within timeout
+		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNas);
+		txRuntime->iso15765.state = TX_WAIT_TX_CONFIRMATION;
+
+
+		resp = canTansmitPaddingHelper(txConfig, txRuntime, &pduInfo);
+		if(resp == E_OK)
+		{
+			// sending done
+		}
+		else
+		{
+			// failed to send
+			ret = BUFREQ_NOT_OK;
+		}
+	}
+
+ 	return ret;
 }
-
-
-
-
 

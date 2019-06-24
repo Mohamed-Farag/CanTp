@@ -6,15 +6,12 @@
 #include "CanTpRuntime.h"
 
 
-
 BufReq_ReturnType PduR_CanTpStartOfReception(PduIdType id,PduInfoType *info,PduLengthType length,PduLengthType *Buffersize);
-
 
 BufReq_ReturnType PduR_CanTpCopyRxData(PduIdType id,PduInfoType *info,PduLengthType *Buffersize);
 
-
-
 void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result);
+
 
 
 
@@ -34,16 +31,10 @@ void CanTp_Init( const CanTp_ConfigType* CfgPtr );
 //void CanTp_GetVersionInfo( Std_VersionInfoType* versioninfo );       /* Not Handled Yet */
 
 
-
-/* This Function moves the state to CanTp_OFF*/
+/* This Function moves the state to CanTp_OFF */
 void CanTp_Shutdown( void );
 
-
 Std_ReturnType CanTp_Transmit( PduIdType TxPduId, const PduInfoType* PduInfoPtr );
-
-////////////////////////////////////////////////////////
-
-// all of the following functions can't be found in the reference code of the company in the .h files
 
 Std_ReturnType CanTp_CancelTransmit( PduIdType TxPduId );  // this one wasn't in the refrence file of the company
 
@@ -52,6 +43,8 @@ Std_ReturnType CanTp_CancelReceive( PduIdType RxPduId ); // also this one
 Std_ReturnType CanTp_ChangeParameter( PduIdType id, TPParameterType parameter, uint16 value ); // and this
 
 Std_ReturnType CanTp_ReadParameter( PduIdType id, TPParameterType parameter, uint16* value );
+
+
 
 void CanTp_MainFunction( void );
 

@@ -5,6 +5,12 @@
 #include "CanTpRuntime.h"
 
 
+
+Std_ReturnType CanIf_TransmitForTest(PduIdType CanTxPduId,const PduInfoType* PduInfoPtr);
+BufReq_ReturnType PduR_CanTpCopyTxData(PduIdType TxPduId , PduInfoType* PduInfoPtr , uint8 Retry , PduLengthType* availableDataSize);
+
+
+
 /**************************************************************** Helper Functions not in sws ***************************************************************************/
 Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, PduInfoType *PduInfoPtr);
 BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime,PduInfoType *info,PduLengthType segmentSize );
@@ -14,15 +20,17 @@ PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const IS
 ISO15765FrameType calcRequiredProtocolFrameType(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime);
 
 
-/*************************************************** Handling All Frames ************************************************************/
+
+/*************************************************** Handling All Frames ***********************************************************************************************/
 void handleSingleFrame(const CanTp_RxNSduType *rxConfig , CanTp_ChannelPrivateType *rxRuntime ,const PduInfoType *rxPduData);
 void handleFirstFrame (const CanTp_RxNSduType *rxConfig , CanTp_ChannelPrivateType *rxRuntime ,const  PduInfoType *rxPduData);
 void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivateType *txRuntime, const PduInfoType *txPduData);
 void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData);
+void handleNextTxFrameSent(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime);
 
 
 
-
+/*************************************************** Sending Frames *****************************************************************************************************/
 void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, BufReq_ReturnType flowStatus);
 BufReq_ReturnType sendNextTxFrame(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime);
 

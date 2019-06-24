@@ -31,7 +31,7 @@ typedef uint8 NotifResultType;
 
 
 typedef enum {
-	IS015765_TRANSMIT,
+	ISO15765_TRANSMIT,
 	ISO15765_RECEIVE
 } CanTp_DirectionType;
 
@@ -201,16 +201,16 @@ typedef struct
 					const float64 CanTpNas;											// Value in second of the N_As timeout. N_As is the time for transmission of a CAN frame (any N_PDU) on the part of the sender.
 					const float64 CanTpNbs;											// Value in seconds of the N_Bs timeout. N_Bs is the time of transmission until reception of the next Flow Control N_PDU.
 					const float64 CanTpNcs;											// Value in seconds of the performance requirement of (N_Cs + N_As). N_Cs is the time in which CanTp is allowed to request the Tx data of a Consecutive Frame N_PDU.
-					boolean CanTpTc;													// Switch for enabling Transmit Cancellation.
+					boolean CanTpTc;												// Switch for enabling Transmit Cancellation.
 					CanTp_AddressingFormatType CanTpTxAddressingFormat;				// Declares which communication addressing format is supported for this TxNSdu.
 					uint16 CanTpTxNSduId;											// Unique identifier to a structure that contains all useful information to process the transmission of a TxNsdu.
 					const CanTp_PaddingActivationType CanTpTxPaddingActivation;		// Defines if the transmit frame use padding or not. This parameter is restricted to 8 byte N-PDUs. ( see sws for more info )
 					CanTp_TaType CanTpTxTaType;										// Declares the communication type of this TxNsdu. ( see sws for more info page 88 )
-					uint8 CanTpTxChannel; 									// Connection to runtime variable index. ( not included in sws )
+					uint8 CanTpTxChannel; 											// Connection to runtime variable index. ( not included in sws )
 
 					//	    CanTpTxNSduRef;         	//pointer					// Reference to a Pdu in the COM-Stack.
 
-					const CanTp_TxNPduType CanTpTxNPdu;     								// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
+					const CanTp_TxNPduType CanTpTxNPdu;     						// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU produces a meta data item of type CAN_ID_32.
 					CanTp_RxFcNPduType CanTpRxFcNPdu; 								// Used for grouping of the ID of a PDU and the Reference to a PDU. This N-PDU consumes a meta data item of type CAN_ID_32.
 					CanTp_NTaType CanTpNTa;          								// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED.
 					CanTp_NSaType CanTpNSa;          								// This container is required for each RxNSdu and TxNSdu with RxTaType CANTP_PHYSICAL and CanTpAddressingFormat CANTP_EXTENDED.

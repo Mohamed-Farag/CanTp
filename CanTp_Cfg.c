@@ -67,7 +67,7 @@ const CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpTxNSduId 			  =					0,
 					.CanTpTxPaddingActivation = 				CANTP_ON,
 					.CanTpTxTaType 			  = 				CANTP_PHYSICAL,
-					.CanTpTxChannel           =                 2,
+					.CanTpTxChannel           =                 0,
 					//CanTpTxNSduRef;       //pointer
 					.CanTpTxNPdu 			  =					{
 					             			                    .CanTpTxNPduConfirmationPduId = 0,
@@ -88,9 +88,9 @@ const CanTp_TxNSduType CanTp_TxNSdu[] =
 		},
 
 		{
-					.CanTpNas				  =					 0,
-					.CanTpNbs 				  =					 0,
-					.CanTpNcs 				  =					 0,
+					.CanTpNas				  =					 8,
+					.CanTpNbs 				  =					 9,
+					.CanTpNcs 				  =					 10,
 					.CanTpTc				  =					 TRUE,
 					.CanTpNAe 			      = 				 {
 					          			                        .CanTpNAe = 0,
@@ -100,7 +100,7 @@ const CanTp_TxNSduType CanTp_TxNSdu[] =
 					.CanTpTxNSduId            =					 1,
 					.CanTpTxPaddingActivation =  				 CANTP_OFF,
 					.CanTpTxTaType 			  =					 CANTP_PHYSICAL,
-					.CanTpTxChannel            =                 3,
+					.CanTpTxChannel            =                 1,
 					//CanTpTxNSduRef;         //pointer
 					.CanTpTxNPdu 			  = 			     {
 					             			                     .CanTpTxNPduConfirmationPduId = 0,
@@ -247,7 +247,7 @@ const CanTp_ConfigType CanTp_Config =
 			.CanTpChannel             		=
 			{
 			     .CanTpChannelMode        =           CANTP_MODE_FULL_DUPLEX,  // it can also take this value (CANTP_MODE_HALF_DUPLEX)
-			     .direction               =             ISO15765_RECEIVE,
+			     .direction               =             ISO15765_TRANSMIT,
 			     .CanTpRxNSdu             =               CanTp_RxNSdu,
 			     .CanTpTxNSdu             =               CanTp_TxNSdu,
 			}

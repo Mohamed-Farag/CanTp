@@ -113,10 +113,14 @@ typedef struct
 typedef struct
 {
     ISO15765TransferControlType iso15765;
-    PduInfoType *pdurBuffer;                // The PDUR make an instance of this.
+    PduInfoType pdurBuffer;                // The PDUR make an instance of this. { we edit it to be structure not a pointer }
+
+
+
     PduLengthType pdurBufferCount;          // Number of bytes in PDUR buffer.
     PduLengthType transferTotal;            // Total length of the PDU.
     PduLengthType transferCount;            // Counter ongoing transfer.
+    PduLengthType availableDataSize;
     CanIfSduType canFrameBuffer;            // Temp storage of SDU data.   { data , ByteCount }
     CanTp_TransferInstanceMode mode;        // mode = { CANTP_RX_WAIT,CANTP_RX_PROCESSING,CANTP_TX_WAIT,CANTP_TX_PROCESSING }
     PduLengthType Buffersize;               // size of buffer in com module.
