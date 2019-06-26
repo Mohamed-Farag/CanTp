@@ -803,7 +803,7 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 		}
 
 		sduData[indexCount++] = computedBs;                                     // putting BlockSize in the Byte #2
-		sduData[indexCount++] = (uint8) rxConfig->CanTpSTmin;				    // putting BlockSize in the Byte #3
+		sduData[indexCount++] = (uint8) rxConfig->CanTpSTmin;				    // putting   STmin   in the Byte #3
 
 		rxRuntime->iso15765.nextFlowControlCount = computedBs;
 		pduInfo.SduLength = indexCount;                           	  // indexcount here = 3
