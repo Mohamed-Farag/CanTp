@@ -158,7 +158,7 @@ const CanTp_RxNSduType CanTp_RxNSdu[] =
 
 		{
 				//.CanTpRxNSdu 				=				 0,    // why is this written here ??? do you have any idea ??
-				.CanTpBs 					= 				 0,
+				.CanTpBs 					= 				 20,
 				.CanTpNar 					=				3,
 				.CanTpNbr				    = 				4,
 				.CanTpNcr					= 				6,

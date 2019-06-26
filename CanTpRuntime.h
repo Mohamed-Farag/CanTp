@@ -4,22 +4,20 @@
 #include "CanTp_Types.h"
 #include "CanTP_Cfg.h"
 
-/* From Arch code */
 
-
-#define ISO15765_TPCI_MASK      0x30
-#define ISO15765_TPCI_SF        0x00  /* Single Frame */
-#define ISO15765_TPCI_FF        0x10  /* First Frame */
-#define ISO15765_TPCI_CF        0x20  /* Consecutive Frame */
-#define ISO15765_TPCI_FC        0x30  /* Flow Control */
-#define ISO15765_TPCI_DL        0x7   /* Single frame data length mask */
-#define ISO1positio5765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
+#define ISO15765_TPCI_MASK      		0x30
+#define ISO15765_TPCI_SF        		0x00  		 /* Single Frame */
+#define ISO15765_TPCI_FF        		0x10  		 /* First Frame */
+#define ISO15765_TPCI_CF        		0x20  		 /* Consecutive Frame */
+#define ISO15765_TPCI_FC        		0x30  		 /* Flow Control */
+#define ISO15765_TPCI_DL        		0x7   		 /* Single frame data length mask */
+#define ISO1positio5765_TPCI_FS_MASK    0x0F  		 /* FlowControl status mask */
 
 //------------------------------------------------------------------------------------------
 
-#define ISO15765_TPCI_FS_MASK   0x0F  /* Flowcontrol status mask */
-//#define CANTP_RXID_LIST_SIZE    8
-//#define CANTP_ERR                              -1
+#define ISO15765_TPCI_FS_MASK   			   0x0F  /* FlowControl status mask */
+//#define CANTP_RXID_LIST_SIZE  			    8
+//#define CANTP_ERR                            -1
 #define ISO15765_FLOW_CONTROL_STATUS_CTS        0
 #define ISO15765_FLOW_CONTROL_STATUS_WAIT       1
 #define ISO15765_FLOW_CONTROL_STATUS_OVFLW      2
@@ -55,7 +53,6 @@
 #define MAX_SEGMENT_DATA_SIZE       8       // Size of a CAN frame data bytes.
 
 
-//#define CANTP_NSDU_RUNTIME_LIST_SIZE 2
 //------------------------------------------------------------------------------------------
 
 
@@ -125,7 +122,7 @@ typedef struct
     PduLengthType availableDataSize;
     CanIfSduType canFrameBuffer;            // Temp storage of SDU data.   { data , ByteCount }
     CanTp_TransferInstanceMode mode;        // mode = { CANTP_RX_WAIT,CANTP_RX_PROCESSING,CANTP_TX_WAIT,CANTP_TX_PROCESSING }
-    PduLengthType Buffersize;               // size of buffer in com module.
+    PduLengthType Buffersize;               // size of buffer in com module. (only for RX)
 
 } CanTp_ChannelPrivateType;
 

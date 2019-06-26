@@ -73,9 +73,11 @@ Std_ReturnType canTansmitPaddingHelper(const CanTp_TxNSduType *txConfig, CanTp_C
 
 //	return CanIf_TransmitForTest(txConfig->CanTpTxNSduId, PduInfoPtr);
 
+
 	CanTp_RxIndication(1,PduInfoPtr);
 
-	CanTp_TxConfirmation(1,0);
+
+
 
 
 	return E_OK;
@@ -97,8 +99,9 @@ Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_C
 	rxRuntime->iso15765.NasNarTimeoutCount = (rxConfig->CanTpNar);  // Value in seconds of the N_Ar timeout. N_Ar is the time for transmission of a CAN frame (any N_PDU) on the receiver side.
 	rxRuntime->iso15765.NasNarPending = TRUE;
 
-	return CanIf_TransmitForTest(1, PduInfoPtr);
-//	return E_OK;
+	CanTp_RxIndication(1,PduInfoPtr);                      // To Send FlowControl To Transmit ECU.
+//	return CanIf_TransmitForTest(1, PduInfoPtr);
+	return E_OK;
 }
 
 /*
@@ -142,8 +145,9 @@ Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_C
 
 BufReq_ReturnType copySegmentToPduRRxBuffer(   const CanTp_RxNSduType *rxConfig,
 													CanTp_ChannelPrivateType *rxRuntime,
-																PduInfoType *info,         // { Data , length }
-																PduLengthType segmentSize )	   // pduLength         /* i think this shoudl be removed sooner */
+																PduInfoType *info        // { Data , length }
+																)
+
 {
 
 	BufReq_ReturnType return_value = BUFREQ_OK;
@@ -368,7 +372,7 @@ void handleSingleFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType
 	rxRuntime->mode = CANTP_RX_PROCESSING;
 	rxRuntime->iso15765.stateTimeoutCount = (rxConfig->CanTpNbr);
 
-	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, info, pduLength);
+	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime, info);
 
 	if (ret == BUFREQ_OK)
 	{
@@ -416,7 +420,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 
 	(void) initRx15765RuntimeData(rxRuntime);                         /* I think this line is useless */
 	pduLength = getPduLength(&rxConfig->CanTpRxAddressingFormat, FIRST_FRAME,rxPduData);
-	rxRuntime->transferTotal = pduLength;                     // 12
+	rxRuntime->transferTotal = pduLength;
 
 
 
@@ -463,7 +467,7 @@ void handleFirstFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType 
 	rxRuntime->iso15765.stateTimeoutCount = (rxConfig->CanTpNbr);
 
 
-	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,MAX_PAYLOAD_FF_STD_ADDR);
+	ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info);
 
 
 
@@ -504,46 +508,37 @@ void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivat
 {
 
 	uint8 indexCount = 0;             // Farag change this from int to uint8
-	uint8 extendedAddress = 0;
+
+	CanTp_TxConfirmation(1,0);       // added for testing only
+
 
 	if ( txRuntime->iso15765.state == TX_WAIT_FLOW_CONTROL )
 	{
 		if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
 		{
-			extendedAddress = txPduData->SduDataPtr[indexCount++];                     // code we7esh 3ashan mabyesta5demhash
+			indexCount++;
 		}
 
 		// txPduData->SduDataPtr[indexCount++] = 1st byte (frame type + flow control flag)
 		switch (txPduData->SduDataPtr[indexCount++] & ISO15765_TPCI_FS_MASK) // checking the flow control flag (Clear To Send=0 , Wait=1, Overflow/abort =2)
 		{
+		uint8 bs;
 		case ISO15765_FLOW_CONTROL_STATUS_CTS:
-//#if 1
-    if(1)
-		{	// This construction is added to make the hcs12 compiler happy. And i remobe it ^^ .
-			const uint8 bs = txPduData->SduDataPtr[indexCount++];
+
+			bs = txPduData->SduDataPtr[indexCount++];        		  // parsing BS from PduData
 			txRuntime->iso15765.BS = bs;
 			txRuntime->iso15765.nextFlowControlCount = bs;
-		}
-		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
 
-/* i don't know what is the benefit from it at all */
-////#else
-//   else
-//	{
-//		txRuntime->iso15765.BS = txPduData->SduDataPtr[indexCount++];
-//		txRuntime->iso15765.nextFlowControlCount = txRuntime->iso15765.BS;
-//		txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];
-//     //#endif
-//	}
+			txRuntime->iso15765.STmin = txPduData->SduDataPtr[indexCount++];	 // parsing STmin from PduData and Putting it in runtime
 
 
-		// change state and setup timout
-		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNcs);
-		txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
-		break;
+			// change state and setup timeout
+			txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNcs);
+			txRuntime->iso15765.state = TX_WAIT_TRANSMIT;
+			break;
 
 		case ISO15765_FLOW_CONTROL_STATUS_WAIT:
-			txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNbs);  /*CanTp: 264*/
+			txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNbs);
 			txRuntime->iso15765.state = TX_WAIT_FLOW_CONTROL;
 			break;
 
@@ -556,16 +551,12 @@ void handleFlowControlFrame(const CanTp_TxNSduType *txConfig,CanTp_ChannelPrivat
 	}
 }
 
-/* TODO: this fuction requires a lot of change */
+/* TODO: this fuction requires a lot of change.   Done ! */
 void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime, const PduInfoType *rxPduData)
 {
 	uint8 indexCount = 0;
 	uint8 segmentNumber = 0;
-	uint8 extendedAddress = 0;
-	PduLengthType bytesLeftToCopy = 0;
-	PduLengthType bytesLeftToTransfer = 0;
 	PduLengthType currentSegmentSize = 0;
-	PduLengthType currentSegmentMaxSize = 0;
 	PduLengthType bytesCopiedToPdurRxBuffer = 0;
 	BufReq_ReturnType ret = BUFREQ_NOT_OK;
 
@@ -576,7 +567,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 	{
 		if (rxConfig->CanTpRxAddressingFormat == CANTP_EXTENDED)
 		{
-			extendedAddress = rxPduData->SduDataPtr[indexCount++];
+		indexCount++;
 		}
 
 		// getting consecutive frame number
@@ -589,27 +580,16 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 			rxRuntime->iso15765.state = IDLE;
 			rxRuntime->mode = CANTP_RX_WAIT;
 		}
+
 		else
 		{
-			currentSegmentMaxSize = MAX_SEGMENT_DATA_SIZE - indexCount;                  // 6 bytes in extended add. & 7 bytes in standard add.
-			bytesLeftToCopy = rxRuntime->transferTotal - rxRuntime->transferCount;
-
-			// determining segment size
-			if (bytesLeftToCopy < currentSegmentMaxSize)
-			{
-				currentSegmentSize = bytesLeftToCopy; // 1-5.
-			}
-			else
-			{
-				currentSegmentSize = currentSegmentMaxSize; 		// 6 or 7, depends on addressing format used.
-			}
 
 			// Copy received data to buffer provided by SDUR.
 			info->SduDataPtr = &rxPduData->SduDataPtr[indexCount];
 
 			info->SduLength = info->SduLength - 1;
 
-			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info,currentSegmentSize);
+			ret = copySegmentToPduRRxBuffer(rxConfig, rxRuntime,info);
 
 			if (ret == BUFREQ_NOT_OK)
 			{
@@ -618,7 +598,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 				rxRuntime->mode = CANTP_RX_WAIT;
 			}
 
-			else if (ret == BUFREQ_BUSY)
+			else if (ret == BUFREQ_BUSY)           // Not handled Yet
 			{
 				boolean dataCopyFailure = FALSE;
 				PduLengthType bytesNotCopiedToPdurRxBuffer = currentSegmentSize - bytesCopiedToPdurRxBuffer;
@@ -656,8 +636,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 
 			else if (ret == BUFREQ_OK)
 			{
-				bytesLeftToTransfer = rxRuntime->transferTotal - rxRuntime->transferCount;
-				if (bytesLeftToTransfer > 0)
+				if (rxRuntime->Buffersize > 0)
 				{
 					rxRuntime->iso15765.framesHandledCount++;                 	  // hanzawed 3adad el frames elly 2tna2alet
 					COUNT_DECREMENT(rxRuntime->iso15765.nextFlowControlCount); 	  // han2alel 3adad el frames elly fadla 3ala  el next flow control
@@ -673,7 +652,7 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 					}
 				}
 
-				else		// bytesLeftToTransfer == 0    ya3ny astlmt kol al PDU.
+				else		// rxRuntime.BufferSize == 0 ------>   received all PDU.
 				{
 					rxRuntime->iso15765.state = IDLE;
 					rxRuntime->mode = CANTP_RX_WAIT;
@@ -682,22 +661,25 @@ void handleConsecutiveFrame(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivat
 			}
 		}
 	}
-} 					// 438, 550 PC-lint: extendedAdress not accessed. Extended adress needs to be implemented. Ticket #136
+}
 
 
 void handleNextTxFrameSent(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime)
 {
 	txRuntime->iso15765.framesHandledCount++;
 
-	// prepare tx buffer for next frame
-	txRuntime->canFrameBuffer.byteCount = 1;
+	// prepare TX buffer for next frame
+	txRuntime->canFrameBuffer.byteCount = 0;
 
-	if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)
+	if (txConfig->CanTpTxAddressingFormat == CANTP_EXTENDED)           /* for Extended */
 	{
 		txRuntime->canFrameBuffer.byteCount++;
 	}
 
-	txRuntime->canFrameBuffer.data[txRuntime->canFrameBuffer.byteCount - 1] = (txRuntime->iso15765.framesHandledCount & SEGMENT_NUMBER_MASK) + ISO15765_TPCI_CF;
+	// To prepare First byte in CF
+	txRuntime->canFrameBuffer.data[txRuntime->canFrameBuffer.byteCount++] = (txRuntime->iso15765.framesHandledCount & SEGMENT_NUMBER_MASK) + ISO15765_TPCI_CF;
+
+
 	COUNT_DECREMENT(txRuntime->iso15765.nextFlowControlCount);
 
 	if (txRuntime->transferTotal <= txRuntime->transferCount)
@@ -710,7 +692,7 @@ void handleNextTxFrameSent(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivat
 
 	else if (txRuntime->iso15765.nextFlowControlCount == 0 && txRuntime->iso15765.BS)
 	{
-		// receiver expects flow control.
+		// TX ECU expects flow control.
 		txRuntime->iso15765.stateTimeoutCount = (txConfig->CanTpNbs);
 		txRuntime->iso15765.state = TX_WAIT_FLOW_CONTROL;
 
@@ -723,7 +705,7 @@ void handleNextTxFrameSent(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivat
 		resp = sendNextTxFrame(txConfig, txRuntime);
 		if (resp == BUFREQ_OK )
 		{
-			// successfully sent frame, wait for tx confirm
+			// successfully sent frame, wait for TX confirm
 		} else if(BUFREQ_BUSY == resp)
 		{
 			// change state and setup timeout
@@ -767,7 +749,6 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 	Std_ReturnType ret = E_NOT_OK;
 	PduInfoType pduInfo;
 	uint8 sduData[8];				  		  // Note that buffer is declared on the stack.   dah fe moskla any awl lma a5rg mn al fn hytms7
-	uint16 spaceFreePduRBuffer = 0;
 	uint16 computedBs = 0;
 
 	pduInfo.SduDataPtr = &sduData[0];         // make pointer points to array of data
@@ -784,20 +765,17 @@ void sendFlowControlFrame(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivate
 	{
 		sduData[indexCount++] = ISO15765_TPCI_FC | ISO15765_FLOW_CONTROL_STATUS_CTS;        	// change the value of control flag (clear to send)
 
-		spaceFreePduRBuffer = rxRuntime->pdurBuffer.SduLength - rxRuntime->pdurBufferCount;	  /* TODO: I think this would be bufferSize directly */
-
-
 
 		if (rxConfig->CanTpRxAddressingFormat == CANTP_EXTENDED)                         // for Extended
 		{
-			computedBs = (spaceFreePduRBuffer / MAX_PAYLOAD_SF_EXT_ADDR) + 1; 			 // + 1 is for local buffer.
+			computedBs = (rxRuntime->Buffersize	 / MAX_PAYLOAD_SF_EXT_ADDR) + 1;
 		}
 		else																			// for standard
 		{
-			computedBs = (spaceFreePduRBuffer / MAX_PAYLOAD_SF_STD_ADDR) + 1;  			// + 1 is for local buffer.
+			computedBs = (rxRuntime->Buffersize	 / MAX_PAYLOAD_SF_STD_ADDR) + 1;
 		}
 
-		if (computedBs > rxConfig->CanTpBs)
+		if (computedBs > rxConfig->CanTpBs)               /* we can't excced the maximum value (not sure yet)*/
 		{
 			computedBs = rxConfig->CanTpBs;
 		}
@@ -848,7 +826,6 @@ BufReq_ReturnType sendNextTxFrame(const CanTp_TxNSduType *txConfig, CanTp_Channe
 
 	uint8 Retry = 0;
 
-	// txRuntime->canFrameBuffer.byteCount = 0    a3tkd lazm ndef al satr dah 3shan al consecutive frame
 
 	// copy data to temp buffer
 	for(; txRuntime->canFrameBuffer.byteCount < MAX_SEGMENT_DATA_SIZE && ret == BUFREQ_OK ;)

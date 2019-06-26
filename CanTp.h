@@ -22,7 +22,7 @@ void initRx15765RuntimeData(CanTp_ChannelPrivateType *rxRuntimeParams);
 
 /********************************************** Prototypes Of Functions used ********************************************************/
 
-void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr);
+//void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr);
 
 /* This Function initate the global parameters of the CanTp Module and move the state to CanTp_ON if there is No Error */
 void CanTp_Init( const CanTp_ConfigType* CfgPtr );
@@ -49,6 +49,7 @@ Std_ReturnType CanTp_ReadParameter( PduIdType id, TPParameterType parameter, uin
 void CanTp_MainFunction( void );
 
 
+void CanTp_TxConfirmation(PduIdType CanTpTxPduId ,Std_ReturnType result );
 
 
 

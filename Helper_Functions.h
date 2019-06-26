@@ -12,8 +12,9 @@ BufReq_ReturnType PduR_CanTpCopyTxData(PduIdType TxPduId , PduInfoType* PduInfoP
 
 
 /**************************************************************** Helper Functions not in sws ***************************************************************************/
+Std_ReturnType canTansmitPaddingHelper(const CanTp_TxNSduType *txConfig, CanTp_ChannelPrivateType *txRuntime,PduInfoType *PduInfoPtr);
 Std_ReturnType canReceivePaddingHelper(const CanTp_RxNSduType *rxConfig, CanTp_ChannelPrivateType *rxRuntime, PduInfoType *PduInfoPtr);
-BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime,PduInfoType *info,PduLengthType segmentSize );
+BufReq_ReturnType copySegmentToPduRRxBuffer(const CanTp_RxNSduType *rxConfig,CanTp_ChannelPrivateType *rxRuntime,PduInfoType *info);
 boolean copySegmentToLocalRxBuffer(CanTp_ChannelPrivateType *rxRuntime, uint8 *segment,PduLengthType segmentSize);
 ISO15765FrameType getFrameType(const CanTp_AddressingFormatType *formatType,const PduInfoType *CanTpRxPduPtr);
 PduLengthType getPduLength(const CanTp_AddressingFormatType *formatType,const ISO15765FrameType iso15765Frame, const PduInfoType *CanTpRxPduPtr);

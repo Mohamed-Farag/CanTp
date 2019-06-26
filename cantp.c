@@ -7,8 +7,8 @@
 //// Description : The CanTp Main Task is Segmentation and reassembling
 //// ============================================================================
 //// */
-//
-/* add this line to test github bash */
+
+
 #include <CanTP/CanTpRuntime.h>
 #include <CanTP/Helper_Functions.h>
 #include <stdio.h>
@@ -28,6 +28,7 @@ extern CanTp_ConfigType CanTp_Config;
 
 void initTx15765RuntimeData(CanTp_ChannelPrivateType *txRuntimeParams)
 {
+	// i think we should add txRuntimeParams->iso15765.bs
     txRuntimeParams->iso15765.state = IDLE;
     txRuntimeParams->iso15765.NasNarPending = FALSE;
     txRuntimeParams->iso15765.framesHandledCount = 0;
@@ -64,34 +65,44 @@ void PduR_CanTpRxIndication(PduIdType CanTpRxPduId,NotifResultType Result)
 
 BufReq_ReturnType PduR_CanTpStartOfReception(PduIdType id,PduInfoType *info,PduLengthType length,PduLengthType *Buffersize)
 {
-	*Buffersize = 40;
+	*Buffersize = 40;          // any number != 0
 	return BUFREQ_OK;
 }
 
 BufReq_ReturnType PduR_CanTpCopyRxData(PduIdType id,PduInfoType *info,PduLengthType *Buffersize)
 {
+	static uint8 count = 0;
 
-	*Buffersize = 30;
+	if (count == 0)
+	{
+		*Buffersize = 12;
+	}
+	else if (count == 1)
+	{
+		*Buffersize = 5;
+	}
+
+	else if (count == 2)
+	{
+			*Buffersize = 0;
+	}
+
+	count++;
 	return BUFREQ_OK;
 }
 
-//
-//Std_ReturnType CanIf_Transmit(const CanTp_RxNSduType, PduInfoPtr)
-//{
-//
-//}
 
 
 void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 {
 
-	const CanTp_RxNSduType *rxConfigParams;			 // Params reside in ROM.
+	const CanTp_RxNSduType *rxConfigParams;			 // Parameters reside in ROM.
 	const CanTp_TxNSduType *txConfigParams;
+
 	CanTp_AddressingFormatType addressingFormat; 	 // Configured
-	CanTp_ChannelPrivateType *runtimeParams = NULL;  // Params reside in RAM.
+	CanTp_ChannelPrivateType *runtimeParams = NULL;  // Parameters reside in RAM.
 	ISO15765FrameType frameType;
-	PduIdType CanTpTxNSduId, CanTpRxNSduId;
-	CanTpRxNSduId = CanTpRxPduId;
+
 
 
 
@@ -126,7 +137,6 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 	{
 		if( CanTpRxPduId != 0xFFFF )
 		{
-		//	CanTpRxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex; /*CanTpRxPDUID = CanTpRxSDUID  so we don't need this line */
 			rxConfigParams = &CanTp_Config.CanTpChannel.CanTpRxNSdu[CanTpRxPduId];
 			runtimeParams = &CanTpRunTimeData.runtimeDataList[rxConfigParams->CanTpRxChannel];	/* Question: Do we need CanTpRxChannel ??  Yes */
 		}
@@ -358,7 +368,6 @@ void CanTp_MainFunction(void)
 {
 	BufReq_ReturnType ret;         		    /* enum = {BUFREQ_OK ,BUFREQ_NOT_OK,BUFREQ_BUSY,BUFREQ_OVFL }*/
 
-	PduLengthType bytesWrittenToSduRBuffer;
 
 	CanTp_ChannelPrivateType *txRuntimeListItem = NULL;
 	CanTp_ChannelPrivateType *rxRuntimeListItem = NULL;
@@ -387,7 +396,7 @@ void CanTp_MainFunction(void)
 						break;
 					}
 
-					txRuntimeListItem->iso15765.state = TX_WAIT_TRANSMIT;
+					txRuntimeListItem->iso15765.state = TX_WAIT_TRANSMIT;            /* when stateTimeoutCount = 0 */
 				}
 
 			case TX_WAIT_TRANSMIT:
@@ -438,6 +447,8 @@ void CanTp_MainFunction(void)
 			case TX_WAIT_TX_CONFIRMATION:
 				{
 					TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
+
+					CanTp_TxConfirmation(1,0);       // added for testing only
 
 					if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
 					{
@@ -500,8 +511,8 @@ void CanTp_MainFunction(void)
 							PduLengthType bytesRemaining = 0;
 
 							 /* copies from local buffer to PDUR buffer. */
-							ret = copySegmentToPduRRxBuffer(rxConfigListItem,rxRuntimeListItem,rxRuntimeListItem->canFrameBuffer.data,rxRuntimeListItem->canFrameBuffer.byteCount
-									);
+							ret = copySegmentToPduRRxBuffer(rxConfigListItem,rxRuntimeListItem,rxRuntimeListItem->canFrameBuffer.data);
+
 							bytesRemaining = rxRuntimeListItem->transferTotal -  rxRuntimeListItem->transferCount;
 							if (bytesRemaining > 0)
 							{
