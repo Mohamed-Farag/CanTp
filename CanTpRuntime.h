@@ -2,7 +2,7 @@
 #define CanTpRuntime_H_
 
 #include "CanTp_Types.h"
-
+#include "CanTP_Cfg.h"
 
 /* From Arch code */
 
@@ -53,7 +53,9 @@
         } \
 
 #define MAX_SEGMENT_DATA_SIZE       8       // Size of a CAN frame data bytes.
-#define CANTP_NSDU_RUNTIME_LIST_SIZE 2
+
+
+//#define CANTP_NSDU_RUNTIME_LIST_SIZE 2
 //------------------------------------------------------------------------------------------
 
 

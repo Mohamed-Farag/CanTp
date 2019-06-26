@@ -92,20 +92,13 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 	ISO15765FrameType frameType;
 	PduIdType CanTpTxNSduId, CanTpRxNSduId;
 	CanTpRxNSduId = CanTpRxPduId;
-	uint16 TxIndex, RxIndex;
-//	TxIndex = getindex();
-	RxIndex = CanTpRxPduId;   /* Omar_Emad tells me that id = index */
 
-	//Check if PduId is valid          /* we know that the value of id we recieve is already exist */
-//	if (CanTpRxPduId >= CANTP_RXID_LIST_SIZE)
-//	{
-//		return;
-//	}
 
-	addressingFormat = CanTp_Config.CanTpChannel.CanTpRxNSdu[RxIndex].CanTpRxAddressingFormat;
 
-	/* TODO John - Use a different indication of not set than 0xFFFF? */
+	addressingFormat = CanTp_Config.CanTpChannel.CanTpRxNSdu[CanTpRxPduId].CanTpRxAddressingFormat;
+
 	frameType = getFrameType(&addressingFormat, CanTpRxPduPtr);
+
 
 
 
@@ -113,19 +106,17 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 
 	if( frameType == FLOW_CONTROL_CTS_FRAME )
 	{
-		/* by check an al index mazboot */
-		if( TxIndex != 0xFFFF )
-		{
-//	//		CanTpTxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpReferringTxIndex;
-//			//txConfigParams = &CanTpConfig.CanTpNSduList[CanTpTxNSduId].configData.CanTpTxNSdu;
-//			txConfigParams = CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpTxNSduId];
-//			runtimeParams = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
-		}
+		if (CanTpRxPduId != 0xFFFF)
+			{
+				txConfigParams = &CanTp_Config.CanTpChannel.CanTpTxNSdu[CanTpRxPduId];
+				runtimeParams = &CanTpRunTimeData.runtimeDataList[txConfigParams->CanTpTxChannel];
+			}
 		else
-		{
-			//Invalid FC received
-			return;
-		}
+			{
+				//Invalid FC received
+				return;
+			}
+
 		rxConfigParams = NULL;
 	}
 
@@ -133,10 +124,10 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 
 	else   	 /*{SF,FF,CF}*/
 	{
-		if( RxIndex != 0xFFFF )
+		if( CanTpRxPduId != 0xFFFF )
 		{
 		//	CanTpRxNSduId = CanTpConfig.CanTpRxIdList[CanTpRxPduId].CanTpNSduIndex; /*CanTpRxPDUID = CanTpRxSDUID  so we don't need this line */
-			rxConfigParams = &CanTp_Config.CanTpChannel.CanTpRxNSdu[RxIndex];
+			rxConfigParams = &CanTp_Config.CanTpChannel.CanTpRxNSdu[CanTpRxPduId];
 			runtimeParams = &CanTpRunTimeData.runtimeDataList[rxConfigParams->CanTpRxChannel];	/* Question: Do we need CanTpRxChannel ??  */
 		}
 		else
@@ -206,22 +197,13 @@ void CanTp_RxIndication(PduIdType CanTpRxPduId,const PduInfoType *CanTpRxPduPtr)
 void CanTp_Init( const CanTp_ConfigType* CfgPtr )
 {
 
-
 		CanTp_ChannelPrivateType *runtimeData;
-		//uint8 TxChannel;
-		//uint8 RxChannel;
 
 
+		 	 	 	 	 	 	 	 	 	 	 	   /* For TX */
 		uint8 i;
-		for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++)
+		for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE_TX; i++)
 			{
-
-
-
-				if ( CfgPtr->CanTpChannel.direction == ISO15765_TRANSMIT )
-				{
-										/* For Tx */
-
 					/* this if handle if CanTpTxChannel < Runtime_list_size
 					 *then access the  CanTpTxChannel element in the runtimeDataList
 					 * else access the last item in the runtimeDataList
@@ -236,36 +218,32 @@ void CanTp_Init( const CanTp_ConfigType* CfgPtr )
 							}
 
 							initTx15765RuntimeData( runtimeData );
-
-				}
-
-				else
-				{
-										/* For Rx */
-					/* this if handle if CanTpTxChannel < Runtime_list_size
-					 *then access the  CanTpTxChannel element in the runtimeDataList
-					 * else access the last item in the runtimeDataList
-					 */
-
-							if (CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel];
-							}
-							else
-							{
-								runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
-							}
-							initRx15765RuntimeData( runtimeData );
-
-				}
 			}
+
+														/* For RX */
+		for (i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE_RX; i++)
+		{
+
+			/* this if handle if CanTpRxChannel < Runtime_list_size
+			 *then access the  CanTpTxChannel element in the runtimeDataList
+			 * else access the last item in the runtimeDataList
+			 */
+					if (CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel < CANTP_NSDU_RUNTIME_LIST_SIZE)
+					{
+						runtimeData = &CanTpRunTimeData.runtimeDataList[CfgPtr->CanTpChannel.CanTpRxNSdu[i].CanTpRxChannel];
+					}
+					else
+					{
+						runtimeData = &CanTpRunTimeData.runtimeDataList[CANTP_NSDU_RUNTIME_LIST_SIZE-1];
+					}
+					initRx15765RuntimeData( runtimeData );
+		}
+
 
 		CanTpRunTimeData.internalState = CANTP_ON;    /* if the initfunc finished correcltly without errors ,then move into CANTP_ON state */
 
 }
 
-//Std_ReturnType CanTp_Transmit( PduIdType TxPduId, const PduInfoType* PduInfoPtr )      		 // our sws
-//Std_ReturnType CanTp_Transmit( PduIdType CanTpTxSduId, const PduInfoType* PduInfoPtr )  		 // their sws
 
 
 /* this function used to copy the Data Length of the data required to be sent from  PDURBuffer to the CanIF Buffer in FF or SF */
@@ -274,7 +252,7 @@ Std_ReturnType CanTp_Transmit( PduIdType TxPduId, const PduInfoType* PduInfoPtr 
 	const CanTp_TxNSduType *txConfig = NULL;
 	CanTp_ChannelPrivateType *txRuntime = NULL;
 	Std_ReturnType ret = 0;
-	PduIdType CanTp_InternalTxNSduId;							/* Unused Variable Now */
+
 
 
 	/*Here we should make a fuction get the Txid and return the correct index in the cfg.c*/
@@ -390,12 +368,11 @@ void CanTp_MainFunction(void)
 
 
 	uint8 i = 0;
-	for( i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE; i++ )
+	for( i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE_TX; i++ )
 	{
 				/* in case of TX */
 
-		if ( CanTp_Config.CanTpChannel.direction == ISO15765_TRANSMIT )
-		{
+
 			txConfigListItem = (CanTp_TxNSduType*)&CanTp_Config.CanTpChannel.CanTpTxNSdu[i];
 			txRuntimeListItem = &CanTpRunTimeData.runtimeDataList[txConfigListItem->CanTpTxChannel];
 
@@ -403,162 +380,166 @@ void CanTp_MainFunction(void)
 			{
 
 			case TX_WAIT_STMIN:
-				TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount); 		// Make sure that STmin timer has expired.
-				if (txRuntimeListItem->iso15765.stateTimeoutCount != 0)
 				{
+					TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount); 		// Make sure that STmin timer has expired.
+					if (txRuntimeListItem->iso15765.stateTimeoutCount != 0)
+					{
+						break;
+					}
+
+					txRuntimeListItem->iso15765.state = TX_WAIT_TRANSMIT;
+				}
+
+			case TX_WAIT_TRANSMIT:
+				{
+					ret = sendNextTxFrame(txConfigListItem, txRuntimeListItem);
+
+					if ( ret == BUFREQ_OK )
+					{
+						// successfully sent frame.
+					}
+
+					else if( ret == BUFREQ_BUSY )
+					{
+						// check N_Cs timeout
+						TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
+						if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
+						{
+							txRuntimeListItem->iso15765.state = IDLE;
+							txRuntimeListItem->mode = CANTP_TX_WAIT;
+							//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);    			 // it is not important in the core Now
+						}
+						else
+						{
+							// For MISRA Rules only as i remember
+						}
+					}
+
+					else
+					{
+						txRuntimeListItem->iso15765.state = IDLE;
+						txRuntimeListItem->mode = CANTP_TX_WAIT;
+						//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); 				 // it is not important in the core Now
+					}
 					break;
 				}
 
-				txRuntimeListItem->iso15765.state = TX_WAIT_TRANSMIT;
-
-
-			case TX_WAIT_TRANSMIT:
-			{
-				ret = sendNextTxFrame(txConfigListItem, txRuntimeListItem);
-
-				if ( ret == BUFREQ_OK )
+			case TX_WAIT_FLOW_CONTROL:
 				{
-					// successfully sent frame.
-				}
-
-				else if( ret == BUFREQ_BUSY )
-				{
-					// check N_Cs timeout
 					TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
 					if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
 					{
 						txRuntimeListItem->iso15765.state = IDLE;
 						txRuntimeListItem->mode = CANTP_TX_WAIT;
-						//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);    			 // it is not important in the core Now
+						//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); 			    // it is not important in the core Now
 					}
-					else
-					{
-						// For MISRA Rules only as i remember
-					}
+					break;
 				}
-
-				else
-				{
-					txRuntimeListItem->iso15765.state = IDLE;
-					txRuntimeListItem->mode = CANTP_TX_WAIT;
-					//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); 				 // it is not important in the core Now
-				}
-				break;
-			}
-
-			case TX_WAIT_FLOW_CONTROL:
-
-				TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
-				if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
-				{
-					txRuntimeListItem->iso15765.state = IDLE;
-					txRuntimeListItem->mode = CANTP_TX_WAIT;
-					//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK); 			    // it is not important in the core Now
-				}
-				break;
-
 			case TX_WAIT_TX_CONFIRMATION:
-				TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
-
-				if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
 				{
-					txRuntimeListItem->iso15765.state = IDLE;
-					txRuntimeListItem->mode = CANTP_TX_WAIT;
-					//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);   // dah m3nah an ana mstny mn al canif confirmation bs fdlt mstny whma mb3t3hosh f bdy al com error
-				}
-				break;
+					TIMER_DECREMENT(txRuntimeListItem->iso15765.stateTimeoutCount);
 
-			default:
-				break;
+					if (txRuntimeListItem->iso15765.stateTimeoutCount == 0)
+					{
+						txRuntimeListItem->iso15765.state = IDLE;
+						txRuntimeListItem->mode = CANTP_TX_WAIT;
+						//PduR_CanTpTxConfirmation(txConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);   // dah m3nah an ana mstny mn al canif confirmation bs fdlt mstny whma mb3t3hosh f bdy al com error
+					}
+					break;
+
+				default:
+					break;
+				}
 
 			}
-		}
+	}
+
 
 
 
 			/* in case of RX */
 
-		else
+	for( i=0; i < CANTP_NSDU_CONFIG_LIST_SIZE_RX; i++ )
 		{
 			rxConfigListItem =(CanTp_RxNSduType*)&CanTp_Config.CanTpChannel.CanTpRxNSdu[i];
 			rxRuntimeListItem = &CanTpRunTimeData.runtimeDataList [ rxConfigListItem->CanTpRxChannel ];
 
 			switch (rxRuntimeListItem->iso15765.state)
 			{
-			case RX_WAIT_CONSECUTIVE_FRAME:
-			{
-				TIMER_DECREMENT (rxRuntimeListItem->iso15765.stateTimeoutCount);
-
-				if (rxRuntimeListItem->iso15765.stateTimeoutCount == 0)
-				{
-					//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);
-					rxRuntimeListItem->iso15765.state = IDLE;
-					rxRuntimeListItem->mode = CANTP_RX_WAIT;
-				}
-				break;
-			}
-
-			case RX_WAIT_SDU_BUFFER:
-			{
-				TIMER_DECREMENT (rxRuntimeListItem->iso15765.stateTimeoutCount);
-				/* We end up here if we have requested a buffer from the
-				 * PDUR but the response have been BUSY. We assume
-				 * we have data in our local buffer and we are expected
-				 * to send a flow-control clear to send (CTS).
-				 */
-				if (rxRuntimeListItem->iso15765.stateTimeoutCount == 0)
-				{
-					//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);			  /* CanTp_00214 */
-					rxRuntimeListItem->iso15765.state = IDLE;
-					rxRuntimeListItem->mode = CANTP_RX_WAIT;
-				}
-
-
-				else			//	stateTimeoutCount != 0
-				{
-					PduLengthType bytesRemaining = 0;
-
-					 /* copies from local buffer to PDUR buffer. */
-					ret = copySegmentToPduRRxBuffer(rxConfigListItem,rxRuntimeListItem,rxRuntimeListItem->canFrameBuffer.data,rxRuntimeListItem->canFrameBuffer.byteCount
-							);
-					bytesRemaining = rxRuntimeListItem->transferTotal -  rxRuntimeListItem->transferCount;
-					if (bytesRemaining > 0)
+				case RX_WAIT_CONSECUTIVE_FRAME:
 					{
-						sendFlowControlFrame( rxConfigListItem, rxRuntimeListItem, ret ); 			/* (Busy or CTS) */
-					}
+						TIMER_DECREMENT (rxRuntimeListItem->iso15765.stateTimeoutCount);
 
-					if (ret == BUFREQ_OK)
-					{
-						if ( bytesRemaining > 0 )
+						if (rxRuntimeListItem->iso15765.stateTimeoutCount == 0)
 						{
-							rxRuntimeListItem->iso15765.stateTimeoutCount = (rxConfigListItem->CanTpNcr);  //UH
-							rxRuntimeListItem->iso15765.state = RX_WAIT_CONSECUTIVE_FRAME;
-						}
-						else
-						{
-							//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_OK);			  /* CanTp_00214 */
+							//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);
 							rxRuntimeListItem->iso15765.state = IDLE;
 							rxRuntimeListItem->mode = CANTP_RX_WAIT;
 						}
+						break;
 					}
-					else if (ret == BUFREQ_NOT_OK )
-					{
-						//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);        /* CanTp_00214 */
-						rxRuntimeListItem->iso15765.state = IDLE;
-						rxRuntimeListItem->mode = CANTP_RX_WAIT;
-					}
-					else if ( ret == BUFREQ_BUSY )
-					{
 
+				case RX_WAIT_SDU_BUFFER:
+					{
+						TIMER_DECREMENT (rxRuntimeListItem->iso15765.stateTimeoutCount);
+						/* We end up here if we have requested a buffer from the
+						 * PDUR but the response have been BUSY. We assume
+						 * we have data in our local buffer and we are expected
+						 * to send a flow-control clear to send (CTS).
+						 */
+						if (rxRuntimeListItem->iso15765.stateTimeoutCount == 0)
+						{
+							//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);
+							rxRuntimeListItem->iso15765.state = IDLE;
+							rxRuntimeListItem->mode = CANTP_RX_WAIT;
+						}
+
+
+						else			//	stateTimeoutCount != 0
+						{
+							PduLengthType bytesRemaining = 0;
+
+							 /* copies from local buffer to PDUR buffer. */
+							ret = copySegmentToPduRRxBuffer(rxConfigListItem,rxRuntimeListItem,rxRuntimeListItem->canFrameBuffer.data,rxRuntimeListItem->canFrameBuffer.byteCount
+									);
+							bytesRemaining = rxRuntimeListItem->transferTotal -  rxRuntimeListItem->transferCount;
+							if (bytesRemaining > 0)
+							{
+								sendFlowControlFrame( rxConfigListItem, rxRuntimeListItem, ret ); 			/* (Busy or CTS) */
+							}
+
+							if (ret == BUFREQ_OK)
+							{
+								if ( bytesRemaining > 0 )
+								{
+									rxRuntimeListItem->iso15765.stateTimeoutCount = (rxConfigListItem->CanTpNcr);  //UH
+									rxRuntimeListItem->iso15765.state = RX_WAIT_CONSECUTIVE_FRAME;
+								}
+								else
+								{
+									//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_OK);			  /* CanTp_00214 */
+									rxRuntimeListItem->iso15765.state = IDLE;
+									rxRuntimeListItem->mode = CANTP_RX_WAIT;
+								}
+							}
+							else if (ret == BUFREQ_NOT_OK )
+							{
+								//PduR_CanTpRxIndication(rxConfigListItem->PduR_PduId, NTFRSLT_E_NOT_OK);        /* CanTp_00214 */
+								rxRuntimeListItem->iso15765.state = IDLE;
+								rxRuntimeListItem->mode = CANTP_RX_WAIT;
+							}
+							else if ( ret == BUFREQ_BUSY )
+							{
+
+							}
+						}
+						break;
 					}
-				}
-				break;
-			}
-			default:
-				break;
-			}
-		}
-	}
+				default:
+					break;
+			}  // end of switch case
+
+		} // end of for loop
 }
 
 
